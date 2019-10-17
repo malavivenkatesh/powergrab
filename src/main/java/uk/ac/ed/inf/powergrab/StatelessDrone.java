@@ -8,16 +8,10 @@ public class StatelessDrone extends Drone {
 
 	public StatelessDrone(double power, double coins) {
 		super(power, coins);
-		
 	}
 
 	@Override
 	public void searchStrategy() {
-		
-
-	}
-	
-	public static void main( String[] args) {
 		
 	}
 

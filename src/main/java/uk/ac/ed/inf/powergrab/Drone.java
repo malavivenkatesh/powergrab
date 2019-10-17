@@ -9,22 +9,28 @@ public abstract class Drone {
 	
 	private double power;
 	private double coins;
-	private List<Integer> pathTrace = new ArrayList<Integer>();
+	private ArrayList<Integer> pathTrace = new ArrayList<Integer>();
 	
 	public Drone() {
 		this.setPower(250.0);
-		this.coins = 0;
+		this.setCoins(0);
 	}
 	
 	public Drone(double power, double coins) {
 		this.setPower(power);
-		this.coins = coins;
+		this.setCoins(coins);
 	}
 	
 	public abstract void searchStrategy();
 	
-	public void setPathTrace(int i) {
+	
+	// TODO Fix path trace implementation
+	public void addPathTrace(int i) {
 		this.pathTrace.add(i);
+	}
+	
+	public ArrayList<Integer> getPathTrace() {
+		return(this.pathTrace);
 	}
 
 	public double getPower() {
@@ -33,6 +39,14 @@ public abstract class Drone {
 
 	public void setPower(double power) {
 		this.power = power;
+	}
+
+	public double getCoins() {
+		return coins;
+	}
+
+	public void setCoins(double coins) {
+		this.coins = coins;
 	}
 	
 }
