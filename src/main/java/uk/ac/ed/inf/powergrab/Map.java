@@ -51,11 +51,21 @@ public class Map {
 	}
 	
 	// TODO add logging functionality so geojson file can be copied and stored
-	public static List<Feature> stringToFeature(String gjson) {
+	public static List<Feature> stringToFeatures(String gjson) {
 		FeatureCollection ft = FeatureCollection.fromJson(gjson);
-	    ArrayList<Feature> features = (ArrayList<Feature>) ft.features();
+		List<Feature> features = ft.features();
 	    
 	    return (features);
+	}
+	
+	// returns list of features from a map for a specified day
+	public static List<Feature> getFeatures(String year, String month, String day) {
+		// executes relavent functions in the correct order to return feature list
+		String stringUrl = formUrlString(year, month, day);
+		String gjson = getNetwork(stringUrl);
+		List<Feature> features = stringToFeatures(gjson);
+		
+		return(features);
 	}
 	
 	public static void main( String[] args ) {
