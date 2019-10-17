@@ -1,15 +1,12 @@
 package uk.ac.ed.inf.powergrab;
 
 import java.util.ArrayList;
-import java.util.List;
-
-import com.mapbox.geojson.Feature;
 
 public abstract class Drone {
 	
 	private double power;
 	private double coins;
-	private ArrayList<Integer> pathTrace = new ArrayList<Integer>();
+	private ArrayList<Position> pathTrace = new ArrayList<Position>();
 	
 	public Drone() {
 		this.setPower(250.0);
@@ -23,13 +20,11 @@ public abstract class Drone {
 	
 	public abstract void searchStrategy();
 	
-	
-	// TODO Fix path trace implementation
-	public void addPathTrace(int i) {
-		this.pathTrace.add(i);
+	public void addPathTrace(Position p) {
+		this.pathTrace.add(p);
 	}
 	
-	public ArrayList<Integer> getPathTrace() {
+	public ArrayList<Position> getPathTrace() {
 		return(this.pathTrace);
 	}
 
