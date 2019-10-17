@@ -1,5 +1,9 @@
 package uk.ac.ed.inf.powergrab;
 
+import java.util.ArrayList;
+
+import com.mapbox.geojson.Feature;
+
 public class StatelessDrone extends Drone {
 
 	public StatelessDrone() {
@@ -11,7 +15,7 @@ public class StatelessDrone extends Drone {
 	}
 
 	@Override
-	public void searchStrategy() {
+	public void searchStrategy(ArrayList<Feature> featureList) {
 		
 	}
 

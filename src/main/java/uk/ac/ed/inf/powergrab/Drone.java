@@ -2,6 +2,8 @@ package uk.ac.ed.inf.powergrab;
 
 import java.util.ArrayList;
 
+import com.mapbox.geojson.Feature;
+
 public abstract class Drone {
 	
 	private double power;
@@ -18,7 +20,8 @@ public abstract class Drone {
 		this.setCoins(coins);
 	}
 	
-	public abstract void searchStrategy();
+	// Each drone should implement a search strategy for a given map
+	public abstract void searchStrategy(ArrayList<Feature> featureList);
 	
 	public void addPathTrace(Position p) {
 		this.pathTrace.add(p);

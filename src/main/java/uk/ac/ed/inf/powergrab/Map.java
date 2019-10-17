@@ -60,7 +60,7 @@ public class Map {
 	
 	// returns list of features from a map for a specified day
 	public static List<Feature> getFeatures(String year, String month, String day) {
-		// executes relavent functions in the correct order to return feature list
+		// executes relevant functions in the correct order to return feature list
 		String stringUrl = formUrlString(year, month, day);
 		String gjson = getNetwork(stringUrl);
 		List<Feature> features = stringToFeatures(gjson);
