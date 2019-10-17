@@ -4,17 +4,28 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
 
+import com.mapbox.geojson.Feature;
 import com.mapbox.geojson.FeatureCollection;
 
 public class Map {
 	
-	public static void main( String[] args ) {
-		String urlPath = "http://homepages.inf.ed.ac.uk/stg/powergrab/2019/01/01/powergrabmap.geojson";
+	public static String formUrlString(String year, String month, String day) {
+		String startPath = "http://homepages.inf.ed.ac.uk/stg/powergrab/";
+		String endPath = "powergrabmap.geojson";
+		
+		return(String.join("/", startPath, year, month, day, endPath));
+	}
+	
+	// Function either returns string of geojson or empty string, if error occurs
+	public static String getNetwork(String stringUrl) {
+		String gjson = "";
+		URL mapUrl;
 		try {
-			URL mapUrl = new URL(urlPath);
+			mapUrl = new URL(stringUrl);
 			HttpURLConnection conn = (HttpURLConnection) mapUrl.openConnection();
 			conn.setReadTimeout(10000);
 			conn.setConnectTimeout(15000);
@@ -24,24 +35,60 @@ public class Map {
 			
 			InputStream inputStream = conn.getInputStream();
 			
-		    String text = "";
 		    Scanner scanner = new Scanner(inputStream);
 		    
 		    while (scanner.hasNext()) {
-		    	text += scanner.next();
+		    	gjson += scanner.next();
 		    }
 		    scanner.close();
 		    conn.disconnect();
 		    
-		    FeatureCollection ft = FeatureCollection.fromJson(text);
-		    
-		    List feat = ft.features();
-		    System.out.print(feat.get(0));
-		    
-		    
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+		
+		return gjson;
+	}
+	
+	// TODO add logging functionality so geojson file can be copied and stored
+	public static List<Feature> stringToFeature(String gjson) {
+		FeatureCollection ft = FeatureCollection.fromJson(gjson);
+	    ArrayList<Feature> features = (ArrayList<Feature>) ft.features();
+	    
+	    return (features);
+	}
+	
+	public static void main( String[] args ) {
+//		String urlPath = "http://homepages.inf.ed.ac.uk/stg/powergrab/2019/01/01/powergrabmap.geojson";
+//		try {
+//			URL mapUrl = new URL(urlPath);
+//			HttpURLConnection conn = (HttpURLConnection) mapUrl.openConnection();
+//			conn.setReadTimeout(10000);
+//			conn.setConnectTimeout(15000);
+//			conn.setRequestMethod("GET");
+//			conn.setDoInput(true);
+//			conn.connect();
+//			
+//			InputStream inputStream = conn.getInputStream();
+//			
+//		    String text = "";
+//		    Scanner scanner = new Scanner(inputStream);
+//		    
+//		    while (scanner.hasNext()) {
+//		    	text += scanner.next();
+//		    }
+//		    scanner.close();
+//		    conn.disconnect();
+//		    
+//		    FeatureCollection ft = FeatureCollection.fromJson(text);
+//		    
+//		    List<Feature> feat = ft.features();
+//		    System.out.print(feat.get(0));
+//		    
+//		    
+//		} catch (IOException e) {
+//			e.printStackTrace();
+//		}
 				
 	}
 }
