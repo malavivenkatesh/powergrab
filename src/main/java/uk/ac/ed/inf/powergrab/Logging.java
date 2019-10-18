@@ -8,11 +8,31 @@ import java.util.ArrayList;
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.mapbox.geojson.Feature;
+import com.mapbox.geojson.LineString;
+import com.mapbox.geojson.Point;
 
 public class Logging {
 	
-	public static void logToGJson(ArrayList<Feature> featureList) {
+	public static ArrayList<Point> positionToPoint(ArrayList<Position> posArray) {
+		ArrayList<Point> pointArray = new ArrayList<Point>();
+		
+		for (Position pos: posArray) {
+			Point p = Point.fromLngLat(pos.longitude, pos.latitude);
+			pointArray.add(p);
+		}
+		
+		return(pointArray);
+	}
+	
+	public static void logToGJson(ArrayList<Feature> featureList, ArrayList<Position> dronePathTrace) {
 		Gson g = new Gson();
+		
+		// Adding drone's path to the feature list for required log file
+		ArrayList<Point> dronePathTracePoint = Logging.positionToPoint(dronePathTrace);
+		LineString lineTrace = LineString.fromLngLats(dronePathTracePoint);
+		Feature lineTraceFeature = Feature.fromGeometry(lineTrace);
+		featureList.add(lineTraceFeature);
+		
         try {
             String jsonString = g.toJson(featureList);
             FileWriter writer = new FileWriter(".\\logs\\example.geojson");
@@ -25,7 +45,6 @@ public class Logging {
 	}
 	
 	public static void main(String[] args) {
-		Logging.logToGJson((ArrayList<Feature>) Map.getFeatures("2019", "01", "01"));
-		
+//		Logging.logToGJson((ArrayList<Feature>) Map.getFeatures("2019", "01", "01"));
 	}
 }
