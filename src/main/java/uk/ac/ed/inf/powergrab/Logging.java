@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.mapbox.geojson.Feature;
+import com.mapbox.geojson.FeatureCollection;
 import com.mapbox.geojson.LineString;
 import com.mapbox.geojson.Point;
 
@@ -34,8 +35,9 @@ public class Logging {
 		featureList.add(lineTraceFeature);
 		
         try {
-            String jsonString = g.toJson(featureList);
-            FileWriter writer = new FileWriter(".\\logs\\example.geojson");
+        	FeatureCollection featureCol = FeatureCollection.fromFeatures(featureList);
+            String jsonString = featureCol.toJson();
+            FileWriter writer = new FileWriter("./logs/example.geojson");
             writer.write(jsonString);
             writer.close();
         } catch (IOException e) {
