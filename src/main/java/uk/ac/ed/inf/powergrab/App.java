@@ -1,5 +1,7 @@
 package uk.ac.ed.inf.powergrab;
 
+import java.io.File;
+import java.util.ArrayList;
 import java.util.List;
 
 import com.mapbox.geojson.Feature;
@@ -15,9 +17,9 @@ public class App
         	return;
         }
         
-        String year = args[0];
+        String day = args[0];
         String month = args[1];
-        String day = args[2];
+        String year = args[2];
         double latitude = Double.parseDouble(args[3]);
         double longitude = Double.parseDouble(args[4]);
         int seed = Integer.parseInt(args[5]);
@@ -39,6 +41,9 @@ public class App
         	return;
         }
         
+        drone.searchStrategy((ArrayList<Feature>) featureList);
+        Logging.logToGJson((ArrayList<Feature>) featureList, drone.getPathTrace());
+        return;
         
     }
 }
