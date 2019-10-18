@@ -10,7 +10,7 @@ public abstract class Drone {
 	// TODO remove getters & setters as necessary
 	private double power;
 	private double coins;
-	private double moves;
+	private int moves;
 	private ArrayList<Position> pathTrace = new ArrayList<Position>();
 	private Position curPos;
 	private Random rnd;
@@ -66,8 +66,8 @@ public abstract class Drone {
 		}
 		
 		if(shortestDistance <= 0.00025) {
-			this.coins += closestFeature.getProperty("coins").getAsDouble();
-			this.power += (double) closestFeature.getProperty("power").getAsDouble();
+//			this.coins += closestFeature.getProperty("coins").getAsDouble();
+//			this.power += (double) closestFeature.getProperty("power").getAsDouble();
 			return(true);
 		}
 		
@@ -111,6 +111,14 @@ public abstract class Drone {
 
 	public Random getRnd() {
 		return rnd;
+	}
+	
+	public int getMoves() {
+		return (this.moves);
+	}
+	
+	public void setMoves(int moves) {
+		this.moves = moves;
 	}
 	
 }
