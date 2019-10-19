@@ -10,10 +10,30 @@ import java.util.Scanner;
 
 import com.mapbox.geojson.Feature;
 import com.mapbox.geojson.FeatureCollection;
+import com.mapbox.geojson.Point;
 
 public class Map {
 	
-	public static String formUrlString(String year, String month, String day) {
+	public static ChargingStation nearestFeature(List<ChargingStation> stations, Position pos) {
+		
+		double shortestDistance = 0;
+		ChargingStation nearestFeature = stations.get(0);
+		
+		for (ChargingStation station : stations) {
+			Position q = new Position(station.getPosition().latitude(), station.getPosition().longitude());
+			
+			double dist = Position.pythDistanceFrom(pos, q);
+			
+			if (dist < shortestDistance) {
+				shortestDistance = dist;
+				nearestFeature = station;
+			}
+		}
+		
+		return(nearestFeature);
+	}
+	
+	private static String formUrlString(String year, String month, String day) {
 		String startPath = "http://homepages.inf.ed.ac.uk/stg/powergrab/";
 		String endPath = "powergrabmap.geojson";
 		
@@ -21,7 +41,7 @@ public class Map {
 	}
 	
 	// Function either returns string of geojson or empty string, if error occurs
-	public static String getNetwork(String stringUrl) {
+	private static String getNetwork(String stringUrl) {
 		String gjson = "";
 		URL mapUrl;
 		try {
@@ -50,17 +70,27 @@ public class Map {
 		return gjson;
 	}
 	
-	// TODO add logging functionality so geojson file can be copied and stored
-	public static List<Feature> stringToFeatures(String gjson) {
+	private static List<Feature> stringToFeatures(String gjson) {
 		FeatureCollection ft = FeatureCollection.fromJson(gjson);
 		List<Feature> features = ft.features();
-	    
-	    return (features);
+		return(features);
+		
 	}
 	
-	// returns list of features from a map for a specified day
+	public static List<ChargingStation> getStations(List<Feature> features) {
+		List<ChargingStation> stations = new ArrayList<ChargingStation>();
+	    for (Feature feature : features) {
+	    	double coins = feature.getProperty("coins").getAsDouble();
+	    	double power = feature.getProperty("power").getAsDouble();
+	    	boolean isGood = coins > 0 && power > 0;
+	    	ChargingStation station = new ChargingStation((Point) feature.geometry(), 
+	    			coins, power, isGood); 
+	    	stations.add(station);
+	    }
+	    return (stations);
+	}
+	
 	public static List<Feature> getFeatures(String year, String month, String day) {
-		// executes relevant functions in the correct order to return feature list
 		String stringUrl = formUrlString(year, month, day);
 		String gjson = getNetwork(stringUrl);
 		List<Feature> features = stringToFeatures(gjson);
@@ -69,36 +99,6 @@ public class Map {
 	}
 	
 	public static void main( String[] args ) {
-//		String urlPath = "http://homepages.inf.ed.ac.uk/stg/powergrab/2019/01/01/powergrabmap.geojson";
-//		try {
-//			URL mapUrl = new URL(urlPath);
-//			HttpURLConnection conn = (HttpURLConnection) mapUrl.openConnection();
-//			conn.setReadTimeout(10000);
-//			conn.setConnectTimeout(15000);
-//			conn.setRequestMethod("GET");
-//			conn.setDoInput(true);
-//			conn.connect();
-//			
-//			InputStream inputStream = conn.getInputStream();
-//			
-//		    String text = "";
-//		    Scanner scanner = new Scanner(inputStream);
-//		    
-//		    while (scanner.hasNext()) {
-//		    	text += scanner.next();
-//		    }
-//		    scanner.close();
-//		    conn.disconnect();
-//		    
-//		    FeatureCollection ft = FeatureCollection.fromJson(text);
-//		    
-//		    List<Feature> feat = ft.features();
-//		    System.out.print(feat.get(0));
-//		    
-//		    
-//		} catch (IOException e) {
-//			e.printStackTrace();
-//		}
 				
 	}
 }

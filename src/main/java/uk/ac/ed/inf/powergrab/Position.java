@@ -1,5 +1,7 @@
 package uk.ac.ed.inf.powergrab;
 
+import com.mapbox.geojson.Point;
+
 public class Position {
 	public double latitude;
 	public double longitude;
@@ -7,6 +9,11 @@ public class Position {
 	public Position(double latitude, double longitude) { 
 		this.latitude = latitude;
 		this.longitude = longitude;
+	}
+	
+	public Position(Point point) {
+		this.latitude = point.latitude();
+		this.longitude = point.longitude();
 	}
 	
 	public Position nextPosition(Direction direction) {
@@ -117,10 +124,18 @@ public class Position {
 	}
 	
 	// calculates the Pythagorean distance from one point to the other
-	public double pythDistanceFrom(Position p) {
+	public static double pythDistanceFrom(Position p, Position q) {
 		double dist = Math.sqrt(
-				Math.pow(latitude - p.latitude, 2) 
-				- Math.pow(longitude - p.longitude, 2));
+				Math.pow(p.latitude - q.latitude, 2) 
+				- Math.pow(p.longitude - q.longitude, 2));
+		
+		return(dist);
+	}
+	
+	public static double pythDistanceFrom(Point p, Point q) {
+		double dist = Math.sqrt(
+				Math.pow(p.latitude() - q.latitude(), 2) 
+				- Math.pow(p.longitude() - q.longitude(), 2));
 		
 		return(dist);
 	}

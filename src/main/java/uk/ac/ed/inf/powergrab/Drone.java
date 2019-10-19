@@ -1,9 +1,9 @@
 package uk.ac.ed.inf.powergrab;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Random;
 
-import com.mapbox.geojson.Feature;
 import com.mapbox.geojson.Point;
 
 public abstract class Drone {
@@ -11,11 +11,11 @@ public abstract class Drone {
 	private double power;
 	private double coins;
 	private int moves;
-	private ArrayList<Position> pathTrace = new ArrayList<Position>();
-	private Position curPos;
+	private ArrayList<Point> pathTrace = new ArrayList<Point>();
 	private Random rnd;
+	private Point curPos;
 	
-	public Drone(Position curPos, int seed) {
+	public Drone(Point curPos, int seed) {
 		this.setPower(250.0);
 		this.setCoins(0);
 		this.moves = 0;
@@ -24,7 +24,7 @@ public abstract class Drone {
 		
 	}
 	
-	public Drone(double power, double coins, int moves, Position curPos, int seed) {
+	public Drone(double power, double coins, int moves, Point curPos, int seed) {
 		this.setPower(power);
 		this.setCoins(coins);
 		this.moves = moves;
@@ -42,22 +42,24 @@ public abstract class Drone {
 		this.power -= 1.25;
 		this.moves += 1;
 		addPathTrace(this.getCurPos());
-		this.setCurPos(getCurPos().nextPosition(dir));
+		Position pos = new Position(getCurPos());
+		Position newPos = pos.nextPosition(dir);
+		Point newPoint = Point.fromLngLat(newPos.longitude, newPos.latitude);
+		this.setCurPos(newPoint);
 		
 		return(true);
 	}
 	
 	// If the drone is in range of a station, transfer power and coins from 
 	// the closest station
-	public boolean inRangeOfStation(ArrayList<Feature> featureList) {
+	public boolean inRangeOfStation(List<ChargingStation> stations) {
 		double shortestDistance = 0;
-		Feature closestFeature = featureList.get(0);
+		ChargingStation closestFeature = stations.get(0);
 		
-		for (Feature feat : featureList) {
-			Point point = (Point) feat.geometry();
-			Position p = new Position(point.latitude(), point.longitude());
+		for (ChargingStation feat : stations) {
+			Point point = (Point) feat.getPosition();
 			
-			double dist = getCurPos().pythDistanceFrom(p);
+			double dist = Position.pythDistanceFrom(getCurPos(), point);
 			
 			if (dist < shortestDistance) {
 				shortestDistance = dist;
@@ -66,8 +68,7 @@ public abstract class Drone {
 		}
 		
 		if(shortestDistance <= 0.00025) {
-//			this.coins += closestFeature.getProperty("coins").getAsDouble();
-//			this.power += (double) closestFeature.getProperty("power").getAsDouble();
+			closestFeature.charge(this);
 			return(true);
 		}
 		
@@ -75,13 +76,13 @@ public abstract class Drone {
 	}
 	
 	// Each drone should implement a search strategy for a given map
-	public abstract void searchStrategy(ArrayList<Feature> featureList);
+	public abstract void searchStrategy(List<ChargingStation> stations);
 	
-	public void addPathTrace(Position p) {
-		this.pathTrace.add(p);
+	public void addPathTrace(Point point) {
+		this.pathTrace.add(point);
 	}
 	
-	public ArrayList<Position> getPathTrace() {
+	public ArrayList<Point> getPathTrace() {
 		return(this.pathTrace);
 	}
 
@@ -101,11 +102,11 @@ public abstract class Drone {
 		this.coins = coins;
 	}
 
-	public Position getCurPos() {
+	public Point getCurPos() {
 		return curPos;
 	}
 
-	public void setCurPos(Position curPos) {
+	public void setCurPos(Point curPos) {
 		this.curPos = curPos;
 	}
 

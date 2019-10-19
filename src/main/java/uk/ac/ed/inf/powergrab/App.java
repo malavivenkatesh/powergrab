@@ -1,10 +1,10 @@
 package uk.ac.ed.inf.powergrab;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
 import com.mapbox.geojson.Feature;
+import com.mapbox.geojson.Point;
 
 public class App 
 {
@@ -26,7 +26,8 @@ public class App
         String state = args[6];
         
         List<Feature> featureList = Map.getFeatures(year, month, day);
-        Position startPos = new Position(latitude, longitude);
+        List<ChargingStation> stations = Map.getStations(featureList);
+        Point startPos = Point.fromLngLat(longitude, latitude);
         
         Drone drone;
         
@@ -41,8 +42,9 @@ public class App
         	return;
         }
         
-        drone.searchStrategy((ArrayList<Feature>) featureList);
-        Logging.logToGJson((ArrayList<Feature>) featureList, drone.getPathTrace());
+        drone.searchStrategy(stations);
+        Logging.logToGJson((ArrayList<Feature>) featureList, drone.getPathTrace(), 
+        		year, month, day, state);
         return;
         
     }

@@ -5,8 +5,6 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 
-import com.google.gson.Gson;
-import com.google.gson.JsonElement;
 import com.mapbox.geojson.Feature;
 import com.mapbox.geojson.FeatureCollection;
 import com.mapbox.geojson.LineString;
@@ -14,30 +12,22 @@ import com.mapbox.geojson.Point;
 
 public class Logging {
 	
-	public static ArrayList<Point> positionToPoint(ArrayList<Position> posArray) {
-		ArrayList<Point> pointArray = new ArrayList<Point>();
+	public static void logToGJson(ArrayList<Feature> featureList, ArrayList<Point> dronePathTrace, 
+			String year, String month, String day, String state) {
 		
-		for (Position pos: posArray) {
-			Point p = Point.fromLngLat(pos.longitude, pos.latitude);
-			pointArray.add(p);
-		}
+		String filename = String.join("-", state, day, month, year);
 		
-		return(pointArray);
-	}
-	
-	public static void logToGJson(ArrayList<Feature> featureList, ArrayList<Position> dronePathTrace) {
-		Gson g = new Gson();
+		new File("./logs").mkdir();
 		
 		// Adding drone's path to the feature list for required log file
-		ArrayList<Point> dronePathTracePoint = Logging.positionToPoint(dronePathTrace);
-		LineString lineTrace = LineString.fromLngLats(dronePathTracePoint);
+		LineString lineTrace = LineString.fromLngLats(dronePathTrace);
 		Feature lineTraceFeature = Feature.fromGeometry(lineTrace);
 		featureList.add(lineTraceFeature);
 		
         try {
         	FeatureCollection featureCol = FeatureCollection.fromFeatures(featureList);
             String jsonString = featureCol.toJson();
-            FileWriter writer = new FileWriter("./logs/example.geojson");
+            FileWriter writer = new FileWriter("./logs/" + filename + ".geojson");
             writer.write(jsonString);
             writer.close();
         } catch (IOException e) {

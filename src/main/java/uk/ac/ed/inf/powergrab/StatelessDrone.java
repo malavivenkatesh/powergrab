@@ -1,118 +1,86 @@
 package uk.ac.ed.inf.powergrab;
 
-import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.EnumSet;
+import java.util.Comparator;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
-import com.mapbox.geojson.Feature;
-import com.mapbox.geojson.Geometry;
 import com.mapbox.geojson.Point;
 
 public class StatelessDrone extends Drone {
 
-	public StatelessDrone(Position curPos, int seed) {
+	public int iter = 0;
+	
+	public StatelessDrone(Point curPos, int seed) {
 		super(curPos, seed);
 	}
 	
 	// TODO Decide on this: For testing, possibly remove
-	public StatelessDrone(double power, double coins, Position pos, int seed) {
+	public StatelessDrone(double power, double coins, Point pos, int seed) {
 		super(power, coins, 0, pos, seed);
-	}
-	
-	public Feature nearestFeature(ArrayList<Feature> featureList) {
-		
-		double shortestDistance = 0;
-		Feature closestFeature = featureList.get(0);
-		
-		for (Feature feat : featureList) {
-			Point point = (Point) feat.geometry();
-			Position p = new Position(point.latitude(), point.longitude());
-			
-			double dist = getCurPos().pythDistanceFrom(p);
-			
-			if (dist < shortestDistance) {
-				shortestDistance = dist;
-				closestFeature = feat;
-			}
-		}
-		
-		return(closestFeature);
 	}
 
 	@Override
-	public void searchStrategy(ArrayList<Feature> featureList) {
-		if (getPower() < 1.25 || getMoves() > 250) {
+	public void searchStrategy(List<ChargingStation> stations) {
+		if (getPower() < 1.25 || getMoves() >= 250) {
 			return;
 		}
 		
-		ArrayList<AbstractMap.SimpleEntry<Feature, Direction>> goodStationsInRange = 
-				new ArrayList<AbstractMap.SimpleEntry<Feature, Direction>>();
-		ArrayList<AbstractMap.SimpleEntry<Feature, Direction>> badStationsInRange = 
-				new ArrayList<AbstractMap.SimpleEntry<Feature, Direction>>();
-		HashSet<Direction> avoidDirs = new HashSet<Direction>();  
+		// Automatically charge
+		inRangeOfStation(stations);		
+		
+		List<ChargingStation> goodStationsInRange = new ArrayList<ChargingStation>();
+		List<Direction> goodStationDirs = new ArrayList<Direction>();
+		
+		List<ChargingStation> badStationsInRange = new ArrayList<ChargingStation>();
+		List<Direction> badStationDirs = new ArrayList<Direction>();
+		
+		Set<Direction> avoidDirs = new HashSet<Direction>();
+
 		
 		for (Direction dir : Direction.values()) {
+			Position pos = new Position(getCurPos());
+			Position nextPos = pos.nextPosition(dir);
+			ChargingStation closestFeature = Map.nearestFeature(stations, nextPos);
+			Position closestFeaturePos = new Position(closestFeature.getPosition());
 			
-			Position nextPos = getCurPos().nextPosition(dir);
-			Feature closestFeature = Map.nearestFeature(featureList, nextPos);
-			Point closestFeaturePoint = (Point) closestFeature.geometry();
-			Position closestFeaturePos = new Position(closestFeaturePoint.latitude(), closestFeaturePoint.longitude());
-			
-			boolean inRange = nextPos.pythDistanceFrom(closestFeaturePos) <= 0.00025;
-			boolean goodClosestFeature = closestFeature.getProperty("marker-symbol").getAsString().equals("lighthouse");
-			boolean badClosestFeature = closestFeature.getProperty("marker-symbol").getAsString().equals("danger");
+			boolean inRange = Position.pythDistanceFrom(pos, closestFeaturePos) <= 0.00025;
 						
 			if (inRange) {
-				if (goodClosestFeature) {
-					AbstractMap.SimpleEntry<Feature, Direction> tup = new AbstractMap.SimpleEntry<>(closestFeature, dir);
-					goodStationsInRange.add(tup);
+				if (closestFeature.isGood()) {
+					goodStationsInRange.add(closestFeature);
+					goodStationDirs.add(dir);
 				}
-				else if (badClosestFeature) {
-					AbstractMap.SimpleEntry<Feature, Direction> tup = new AbstractMap.SimpleEntry<>(closestFeature, dir);
-					badStationsInRange.add(tup);
+				else {
+					badStationsInRange.add(closestFeature);
+					badStationDirs.add(dir);
 					avoidDirs.add(dir);
 				}
+			}
+			if (!nextPos.inPlayArea()) {
+				avoidDirs.add(dir);
 			}
 		}
 		
 		// Picking the best value based on adding together the power and coins at each station
 		// and choosing the station with the max value
-		double bestVal = 0;
-		int index = 0;
+		int index;
 		Direction nextDir;
 		
-		if (goodStationsInRange.size() > 0) {
-			for (int i=0; i < goodStationsInRange.size(); i++) {
-				AbstractMap.SimpleEntry<Feature, Direction> station = goodStationsInRange.get(i);
-				double stationCoins = station.getKey().getProperty("coins").getAsDouble();
-				double stationPower = station.getKey().getProperty("power").getAsDouble();
-				double stationVal = stationCoins + stationPower;
-				
-				if (stationVal > bestVal) {
-					bestVal = stationVal;
-					index = i;
-				}
-			}
-			
-			nextDir = goodStationsInRange.get(index).getValue();
+		Comparator<ChargingStation> compCoinsAndPower = 
+				Comparator.comparing(ChargingStation::getCoins).thenComparing(ChargingStation::getPower);
+		
+		if (goodStationsInRange.size() > 0) {			
+			ChargingStation bestStation = Collections.max(goodStationsInRange, compCoinsAndPower);
+			index = goodStationsInRange.indexOf(bestStation);
+			nextDir = goodStationDirs.get(index);
 		}
 		else if (badStationsInRange.size() == 16) {
-			for (int i=0; i < goodStationsInRange.size(); i++) {
-				AbstractMap.SimpleEntry<Feature, Direction> station = goodStationsInRange.get(i);
-				double stationCoins = station.getKey().getProperty("coins").getAsDouble();
-				double stationPower = station.getKey().getProperty("power").getAsDouble();
-				double stationVal = stationCoins + stationPower;
-				
-				if (stationVal > bestVal) {
-					bestVal = stationVal;
-					index = i;
-				}
-			}
-			
-			nextDir = badStationsInRange.get(index).getValue();
+			ChargingStation bestStation = Collections.max(badStationsInRange, compCoinsAndPower);
+			index = badStationsInRange.indexOf(bestStation);
+			nextDir = badStationDirs.get(index);
 		}
 		else {
 			Set<Direction> possibleDirs = new HashSet<Direction>();
@@ -126,8 +94,7 @@ public class StatelessDrone extends Drone {
 		}
 		
 		move(nextDir);
-		searchStrategy(featureList);
-		
+		searchStrategy(stations);
 	}
 
 }
