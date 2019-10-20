@@ -28,7 +28,7 @@ public class StatelessDrone extends Drone {
 			return;
 		}
 		
-		// Automatically charge
+		// Automatically charge after every move
 		inRangeOfStation(stations);		
 		
 		List<ChargingStation> goodStationsInRange = new ArrayList<ChargingStation>();
@@ -69,19 +69,23 @@ public class StatelessDrone extends Drone {
 		int index;
 		Direction nextDir;
 		
+		// Compare the numerical value of the station by adding power and coins together
 		Comparator<ChargingStation> compCoinsAndPower = 
-				Comparator.comparing(ChargingStation::getCoins).thenComparing(ChargingStation::getPower);
+				Comparator.comparing(x-> x.getCoins() + x.getPower());
 		
+		// Pick the best good station in range
 		if (goodStationsInRange.size() > 0) {			
 			ChargingStation bestStation = Collections.max(goodStationsInRange, compCoinsAndPower);
 			index = goodStationsInRange.indexOf(bestStation);
 			nextDir = goodStationDirs.get(index);
 		}
+		// Or the least bad station if surrounded by bad stations
 		else if (badStationsInRange.size() == 16) {
 			ChargingStation bestStation = Collections.max(badStationsInRange, compCoinsAndPower);
 			index = badStationsInRange.indexOf(bestStation);
 			nextDir = badStationDirs.get(index);
 		}
+		// Otherwise move so not in range of any bad station
 		else {
 			Set<Direction> possibleDirs = new HashSet<Direction>();
 			Collections.addAll(possibleDirs, Direction.values());

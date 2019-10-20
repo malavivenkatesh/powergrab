@@ -15,9 +15,9 @@ public class Logging {
 	public static void logToGJson(ArrayList<Feature> featureList, ArrayList<Point> dronePathTrace, 
 			String year, String month, String day, String state) {
 		
-		String filename = String.join("-", state, day, month, year);
+		String filename = String.join("-", state, day, month, year, ".geojson");
 		
-		new File("./logs").mkdir();
+		new File("logs").mkdir();
 		
 		// Adding drone's path to the feature list for required log file
 		LineString lineTrace = LineString.fromLngLats(dronePathTrace);
@@ -27,7 +27,8 @@ public class Logging {
         try {
         	FeatureCollection featureCol = FeatureCollection.fromFeatures(featureList);
             String jsonString = featureCol.toJson();
-            FileWriter writer = new FileWriter("./logs/" + filename + ".geojson");
+            String filePath = String.join("/", ".", "logs", filename);
+            FileWriter writer = new FileWriter(filePath);
             writer.write(jsonString);
             writer.close();
         } catch (IOException e) {
