@@ -39,5 +39,8 @@ public class Logging {
 	
 	public static void main(String[] args) {
 //		Logging.logToGJson((ArrayList<Feature>) Map.getFeatures("2019", "01", "01"));
+//		for (Direction dir: Direction.values()) {
+//			System.out.println(dir.toString());
+//		}
 	}
 }

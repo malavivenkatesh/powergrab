@@ -2,6 +2,7 @@ package uk.ac.ed.inf.powergrab;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import com.mapbox.geojson.Point;
 
@@ -17,28 +18,30 @@ public class StatefulDrone extends Drone {
 	
 	@Override
 	public void searchStrategy(List<ChargingStation> stations) {
-		// TODO Auto-generated method stub
+		// End conditions
+		if (getPower() < 1.25 || getMoves() >= 250) {
+			return;
+		}
 		
+		// Automatically charge after every move
+		inRangeOfStation(stations);	
+		
+		
+		List<ChargingStation> goodStations = stations.
+				stream().filter(station -> station.isGood()).
+				collect(Collectors.toList());
+		List<ChargingStation> badStations =  stations.
+				stream().filter(station -> !station.isGood()).
+				collect(Collectors.toList());
+		
+		Position curPos = new Position(getCurPos());
+		ChargingStation nearestStation = Map.nearestFeature(goodStations, curPos);
+		
+			
 	}
 	
-//	public Feature nearestFeature(ArrayList<Feature> featureList) {
-//		
-//		double shortestDistance = 0;
-//		Feature closestFeature = featureList.get(0);
-//		
-//		for (Feature feat : featureList) {
-//			Point point = (Point) feat.geometry();
-//			Position p = new Position(point.latitude(), point.longitude());
-//			
-//			double dist = getCurPos().pythDistanceFrom(p);
-//			
-//			if (dist < shortestDistance) {
-//				shortestDistance = dist;
-//				closestFeature = feat;
-//			}
-//		}
-//		
-//		return(closestFeature);
-//	}
+	public static void main() {
+//		System.out.print(Direction.values());
+	}
 
 }
