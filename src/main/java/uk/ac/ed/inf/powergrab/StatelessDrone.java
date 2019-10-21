@@ -29,7 +29,7 @@ public class StatelessDrone extends Drone {
 		}
 		
 		// Automatically charge after every move
-		inRangeOfStation(stations);		
+		boolean charged = inRangeOfStation(stations);
 		
 		List<ChargingStation> goodStationsInRange = new ArrayList<ChargingStation>();
 		List<Direction> goodStationDirs = new ArrayList<Direction>();
@@ -43,17 +43,19 @@ public class StatelessDrone extends Drone {
 		for (Direction dir : Direction.values()) {
 			Position pos = new Position(getCurPos());
 			Position nextPos = pos.nextPosition(dir);
-			ChargingStation closestFeature = Map.nearestFeature(stations, nextPos);
-			Position closestFeaturePos = new Position(closestFeature.getPosition());
+//			ChargingStation closestFeature = Map.nearestFeature(stations, nextPos);
+			Point nextPoint = Point.fromLngLat(nextPos.longitude, nextPos.latitude);
+			ChargingStation closestFeature = Map.nearestFeature(stations, nextPoint);
 			
-			boolean inRange = Position.pythDistanceFrom(pos, closestFeaturePos) <= 0.00025;
-						
+			boolean inRange = Position.pythDistanceFrom(nextPoint, closestFeature.getPosition()) < 0.00025;
+			
+//			System.out.println("Dir: " + dir.toString() + " inRange: " + inRange + " LatLng: " + nextPoint.coordinates() + " isGood: " + closestFeature.isGood());
 			if (inRange) {
-				if (closestFeature.isGood()) {
+				if (closestFeature.isGood() && closestFeature.getCoins() > 0 && closestFeature.getPower() > 0) {
 					goodStationsInRange.add(closestFeature);
 					goodStationDirs.add(dir);
 				}
-				else {
+				else if (!closestFeature.isGood()) {
 					badStationsInRange.add(closestFeature);
 					badStationDirs.add(dir);
 					avoidDirs.add(dir);
@@ -98,7 +100,21 @@ public class StatelessDrone extends Drone {
 		}
 		
 		move(nextDir);
+		
+//		System.out.println("Moves: " + getMoves() +  " Power: " + getPower() + " Next Direction: " + nextDir.toString());
+//		avoidDirs.forEach(dir -> System.out.print(dir.toString() + " "));
+//		System.out.println(badStationsInRange.size());
+//		badStationsInRange.forEach(station -> System.out.print(station.getId() + " " + station.getPosition().latitude() + " " + station.getPosition().longitude()));
+//		System.out.println();
+//		badStationDirs.forEach(dir -> System.out.print(dir.toString() + " "));
+//		System.out.println();
+//		goodStationsInRange.forEach(station -> System.out.print(station.getId() + " " + station.getPosition().latitude() + " " + station.getPosition().longitude()));
+//		System.out.println();
+//		goodStationDirs.forEach(dir -> System.out.print(dir.toString() + " "));
+//		System.out.println();
+		
 		searchStrategy(stations);
+		
 	}
 
 }

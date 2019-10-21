@@ -34,8 +34,7 @@ public class StatefulDrone extends Drone {
 				stream().filter(station -> !station.isGood()).
 				collect(Collectors.toList());
 		
-		Position curPos = new Position(getCurPos());
-		ChargingStation nearestStation = Map.nearestFeature(goodStations, curPos);
+		ChargingStation nearestStation = Map.nearestFeature(goodStations, getCurPos());
 		
 			
 	}

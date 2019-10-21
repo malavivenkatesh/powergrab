@@ -124,18 +124,10 @@ public class Position {
 	}
 	
 	// calculates the Pythagorean distance from one point to the other
-	public static double pythDistanceFrom(Position p, Position q) {
-		double dist = Math.sqrt(
-				Math.pow(p.latitude - q.latitude, 2) 
-				- Math.pow(p.longitude - q.longitude, 2));
-		
-		return(dist);
-	}
-	
 	public static double pythDistanceFrom(Point p, Point q) {
 		double dist = Math.sqrt(
 				Math.pow(p.latitude() - q.latitude(), 2) 
-				- Math.pow(p.longitude() - q.longitude(), 2));
+				+ Math.pow(p.longitude() - q.longitude(), 2));
 		
 		return(dist);
 	}

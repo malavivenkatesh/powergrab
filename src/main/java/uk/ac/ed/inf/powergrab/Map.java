@@ -13,16 +13,14 @@ import com.mapbox.geojson.FeatureCollection;
 import com.mapbox.geojson.Point;
 
 public class Map {
-	
-	public static ChargingStation nearestFeature(List<ChargingStation> stations, Position pos) {
+	public static ChargingStation nearestFeature(List<ChargingStation> stations, Point pos) {
 		
-		double shortestDistance = 0;
+		double shortestDistance = Integer.MAX_VALUE;
 		ChargingStation nearestFeature = stations.get(0);
 		
 		for (ChargingStation station : stations) {
-			Position q = new Position(station.getPosition().latitude(), station.getPosition().longitude());
 			
-			double dist = Position.pythDistanceFrom(pos, q);
+			double dist = Position.pythDistanceFrom(pos, station.getPosition());
 			
 			if (dist < shortestDistance) {
 				shortestDistance = dist;
@@ -33,6 +31,7 @@ public class Map {
 		return(nearestFeature);
 	}
 	
+
 	private static String formUrlString(String year, String month, String day) {
 		String startPath = "http://homepages.inf.ed.ac.uk/stg/powergrab/";
 		String endPath = "powergrabmap.geojson";
@@ -83,8 +82,9 @@ public class Map {
 	    	double coins = feature.getProperty("coins").getAsDouble();
 	    	double power = feature.getProperty("power").getAsDouble();
 	    	boolean isGood = coins > 0 && power > 0;
+	    	String id = feature.getProperty("id").getAsString();
 	    	ChargingStation station = new ChargingStation((Point) feature.geometry(), 
-	    			coins, power, isGood); 
+	    			coins, power, isGood, id); 
 	    	stations.add(station);
 	    }
 	    return (stations);

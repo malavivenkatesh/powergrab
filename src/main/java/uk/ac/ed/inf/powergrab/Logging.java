@@ -15,7 +15,7 @@ public class Logging {
 	public static void logToGJson(ArrayList<Feature> featureList, ArrayList<Point> dronePathTrace, 
 			String year, String month, String day, String state) {
 		
-		String filename = String.join("-", state, day, month, year, ".geojson");
+		String filename = String.join("-", state, day, month, year) + ".geojson";
 		
 		new File("logs").mkdir();
 		

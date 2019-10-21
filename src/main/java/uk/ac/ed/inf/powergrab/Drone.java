@@ -53,25 +53,13 @@ public abstract class Drone {
 	// If the drone is in range of a station, transfer power and coins from 
 	// the closest station
 	public boolean inRangeOfStation(List<ChargingStation> stations) {
-		double shortestDistance = 0;
-		ChargingStation closestFeature = stations.get(0);
-		
-		for (ChargingStation feat : stations) {
-			Point point = (Point) feat.getPosition();
-			
-			double dist = Position.pythDistanceFrom(getCurPos(), point);
-			
-			if (dist < shortestDistance) {
-				shortestDistance = dist;
-				closestFeature = feat;
-			}
-		}
+		ChargingStation closestFeature = Map.nearestFeature(stations, getCurPos());
+		double shortestDistance = Position.pythDistanceFrom(getCurPos(), closestFeature.getPosition());
 		
 		if(shortestDistance <= 0.00025) {
 			closestFeature.charge(this);
 			return(true);
 		}
-		
 		return(false);
 	}
 	
