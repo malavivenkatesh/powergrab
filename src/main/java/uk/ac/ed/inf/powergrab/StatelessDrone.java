@@ -24,7 +24,11 @@ public class StatelessDrone extends Drone {
 
 	@Override
 	public void searchStrategy(List<ChargingStation> stations) {
+		addPathTrace(this.getCurPos());
+		
 		if (getPower() < 1.25 || getMoves() >= 250) {
+			System.out.print(getCoins());
+
 			return;
 		}
 		

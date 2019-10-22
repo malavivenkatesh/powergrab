@@ -123,7 +123,7 @@ public class Position {
 		return true;
 	}
 	
-	// calculates the Pythagorean distance from one point to the other
+	// Pythagorean distance from one point to the other
 	public static double pythDistanceFrom(Point p, Point q) {
 		double dist = Math.sqrt(
 				Math.pow(p.latitude() - q.latitude(), 2) 
@@ -131,4 +131,26 @@ public class Position {
 		
 		return(dist);
 	}
+	
+	// Heuristic distance for A Star search
+	public static double diagDistance(Point p, Point q) {
+		double dx = p.longitude() - q.longitude();
+		double dy = p.latitude() - q.longitude();
+		double dist = 0.0003 * ((dx + dy) - Math.min(dx, dy));
+		return(dist);
+	}
+	
+	public static void main(String[] args) {
+		double longitude = -3;
+		double latitude = 55;
+		Position s = new Position(latitude, longitude);
+		Point sPoint = Point.fromLngLat(longitude, latitude);
+		for (Direction dir : Direction.values()) {
+			Position p = s.nextPosition(dir);
+			Point pPoint = Point.fromLngLat(p.longitude, p.longitude);
+			double dist = diagDistance(sPoint, pPoint);
+			System.out.println(dist);
+		}
+	}
+	
 }

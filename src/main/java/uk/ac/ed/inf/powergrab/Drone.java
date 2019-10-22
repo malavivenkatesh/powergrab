@@ -41,7 +41,6 @@ public abstract class Drone {
 		
 		this.power -= 1.25;
 		this.moves += 1;
-		addPathTrace(this.getCurPos());
 		Position pos = new Position(getCurPos());
 		Position newPos = pos.nextPosition(dir);
 		Point newPoint = Point.fromLngLat(newPos.longitude, newPos.latitude);
@@ -56,7 +55,7 @@ public abstract class Drone {
 		ChargingStation closestFeature = Map.nearestFeature(stations, getCurPos());
 		double shortestDistance = Position.pythDistanceFrom(getCurPos(), closestFeature.getPosition());
 		
-		if(shortestDistance <= 0.00025) {
+		if(shortestDistance < 0.00025) {
 			closestFeature.charge(this);
 			return(true);
 		}

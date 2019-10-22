@@ -2,6 +2,7 @@ package uk.ac.ed.inf.powergrab;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import com.mapbox.geojson.Feature;
 import com.mapbox.geojson.Point;
@@ -41,6 +42,16 @@ public class App
         	System.out.print("Invalid state for drone.");
         	return;
         }
+        
+		List<ChargingStation> goodStations = stations.
+				stream().filter(station -> station.isGood() && !station.isVisited()).
+				collect(Collectors.toList());
+		
+		double sum = 0;
+		for (ChargingStation station: goodStations) {
+			sum += station.getCoins();
+		}
+		System.out.println(sum);
         
         drone.searchStrategy(stations);
         Logging.logToGJson((ArrayList<Feature>) featureList, drone.getPathTrace(), 

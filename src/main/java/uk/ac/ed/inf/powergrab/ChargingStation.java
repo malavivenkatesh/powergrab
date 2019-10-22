@@ -9,6 +9,7 @@ public class ChargingStation {
 	private double power;
 	private boolean isGood;
 	private String id;
+	private boolean visited;
 	
 	public ChargingStation(Point position, double coins, double power, boolean isGood, String id) {
 		this.position = position;
@@ -16,6 +17,7 @@ public class ChargingStation {
 		this.power = power;
 		this.isGood = isGood;
 		this.id = id;
+		this.visited = false;
 	}
 	
 	public void charge(Drone drone) {
@@ -24,6 +26,7 @@ public class ChargingStation {
 		
 		this.coins = 0;
 		this.power = 0;
+		this.visited = true;
 	}
 
 	public Point getPosition() {
@@ -60,6 +63,14 @@ public class ChargingStation {
 
 	public void setId(String id) {
 		this.id = id;
+	}
+
+	public boolean isVisited() {
+		return visited;
+	}
+
+	public void setVisited(boolean visited) {
+		this.visited = visited;
 	}
 
 }
