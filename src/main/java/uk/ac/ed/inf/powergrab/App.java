@@ -52,6 +52,7 @@ public class App
 			sum += station.getCoins();
 		}
 		System.out.println(sum);
+		System.out.println();
         
         drone.searchStrategy(stations);
         Logging.logToGJson((ArrayList<Feature>) featureList, drone.getPathTrace(), 

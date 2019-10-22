@@ -35,7 +35,7 @@ public class StatefulDrone extends Drone {
 				stream().filter(station -> !station.isGood()).
 				collect(Collectors.toList());
 		
-		goodStations.forEach(station -> System.out.print(station.getId() + " " + station.getPosition().latitude() + " " + station.getPosition().longitude()));
+//		goodStations.forEach(station -> System.out.print(station.getId() + " " + station.getPosition().latitude() + " " + station.getPosition().longitude()));
 		System.out.println();
 		
 		if (goodStations.size() == 0) {
@@ -74,7 +74,8 @@ public class StatefulDrone extends Drone {
 //			ChargingStation closestFeature = Map.nearestFeature(stations, nextPos);
 			Point nextPoint = Point.fromLngLat(nextPos.longitude, nextPos.latitude);
 			ChargingStation closestFeature = Map.nearestFeature(badStations, nextPoint);
-			double distToStation = Position.pythDistanceFrom(getCurPos(), closestFeature.getPosition());
+			double distToStation = Position.pythDistanceFrom(nextPoint, closestFeature.getPosition());
+			System.out.println("Direction: " + dir.toString() + " Closest station: " + closestFeature.getId() + " Distance: " + distToStation);
 			
 			if (!closestFeature.isGood() && distToStation < 0.00025) {
 					avoidDirs.add(dir);
@@ -98,11 +99,10 @@ public class StatefulDrone extends Drone {
 			
 			Position pos = new Position(getCurPos());
 			Position nextPos = pos.nextPosition(dir);
-//			ChargingStation closestFeature = Map.nearestFeature(stations, nextPos);
 			Point nextPoint = Point.fromLngLat(nextPos.longitude, nextPos.latitude);
 			
 			double dist = Position.pythDistanceFrom(nextPoint, goal.getPosition());
-			System.out.println(" Direction: " + dir.toString() + " Distance: " + dist);
+			System.out.println("Direction: " + dir.toString() + " Distance: " + dist);
 			
 			if (dist < shortestDistance) {
 				shortestDistance = dist;
