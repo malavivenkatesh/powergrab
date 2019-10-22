@@ -28,3 +28,9 @@ hs_err_pid*
 
 # Eclipse settings
 .settings/*
+
+# Logs for the drone movements
+.logs/*
+
+# Maven class files and jar
+.target/*
