@@ -27,7 +27,7 @@ public class Logging {
         try {
         	FeatureCollection featureCol = FeatureCollection.fromFeatures(featureList);
             String jsonString = featureCol.toJson();
-            String filePath = String.join("/", ".", "logs", filename);
+            String filePath = String.join(File.separator, ".", "logs", filename);
             FileWriter writer = new FileWriter(filePath);
             writer.write(jsonString);
             writer.close();
