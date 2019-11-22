@@ -21,11 +21,28 @@ public class ChargingStation {
 	}
 	
 	public void charge(Drone drone) {
-		drone.setPower(drone.getPower() + power);
-		drone.setCoins(drone.getCoins() + coins);
+		double newCoins = drone.getCoins() + coins;
+		double newPower = drone.getPower() + power;
+		double remainingCoins = 0;
+		double remainingPower = 0;
 		
-		this.coins = 0;
-		this.power = 0;
+		// Dealing with case where the coins or power become negative after charging
+		if (newCoins < 0) {
+			remainingCoins = newCoins;
+			newCoins = 0;
+		}
+		
+		if (newPower < 0) {
+			remainingPower = newPower;
+			newPower = 0;
+		}
+		
+		// Setting new drone and charging station power and coins
+		drone.setPower(newPower);
+		drone.setCoins(newCoins);
+		
+		this.coins = remainingCoins;
+		this.power = remainingPower;
 		this.visited = true;
 	}
 

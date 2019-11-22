@@ -52,9 +52,12 @@ public class App
 		for (ChargingStation station: goodStations) {
 			sum += station.getCoins();
 		}
-		System.out.println(sum);
-		System.out.println();
 		
+		double sumP = 0;
+		for (ChargingStation station: goodStations) {
+			sumP += station.getPower();
+		}
+	
 		
 		try {
 			Logging.setWriter(year, month, day, state);
@@ -70,6 +73,10 @@ public class App
 			e.printStackTrace();
 		}
         
+        System.out.println();
+        System.out.printf("Total    Coins: %f, Total    Power: %f", sum, sumP);
+        System.out.println();
+        System.out.printf("Gathered Coins: %f, Gathered Power: %f", drone.getCoins(), drone.getPower());
         System.out.println();
         return;
         
