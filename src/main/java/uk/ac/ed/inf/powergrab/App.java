@@ -1,5 +1,6 @@
 package uk.ac.ed.inf.powergrab;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -53,10 +54,23 @@ public class App
 		}
 		System.out.println(sum);
 		System.out.println();
-        
+		
+		
+		try {
+			Logging.setWriter(year, month, day, state);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
         drone.searchStrategy(stations);
         Logging.logToGJson((ArrayList<Feature>) featureList, drone.getPathTrace(), 
         		year, month, day, state);
+        try {
+			Logging.bw.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+        
+        System.out.println();
         return;
         
     }

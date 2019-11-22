@@ -1,5 +1,6 @@
 package uk.ac.ed.inf.powergrab;
 
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -11,6 +12,8 @@ import com.mapbox.geojson.LineString;
 import com.mapbox.geojson.Point;
 
 public class Logging {
+	
+	protected static BufferedWriter bw;
 	
 	public static void logToGJson(ArrayList<Feature> featureList, ArrayList<Point> dronePathTrace, 
 			String year, String month, String day, String state) {
@@ -37,10 +40,30 @@ public class Logging {
         }
 	}
 	
-	public static void main(String[] args) {
-//		Logging.logToGJson((ArrayList<Feature>) Map.getFeatures("2019", "01", "01"));
-//		for (Direction dir: Direction.values()) {
-//			System.out.println(dir.toString());
-//		}
+	public static void setWriter(String year, String month, String day, String state) throws IOException {
+		String filename = String.join("-", state, day, month, year) + ".txt";
+		new File("logs").mkdir();
+        String filePath = String.join(File.separator, ".", "logs", filename);
+		
+		FileWriter fw = new FileWriter(filePath, true);
+		bw = new BufferedWriter(fw);
 	}
+	
+	public static void logToTxt(Point curPos, Point nextPos, Direction dir, double coins, double power) {
+		String info = String.join(",", Double.toString(curPos.latitude()),
+				 		Double.toString(curPos.longitude()),
+				 		dir.toString(),
+				 		Double.toString(nextPos.latitude()),
+				 		Double.toString(nextPos.longitude()),
+				 		Double.toString(coins),
+				 		Double.toString(power)
+						);
+		try {
+			bw.write(info);
+			bw.newLine();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+	
 }

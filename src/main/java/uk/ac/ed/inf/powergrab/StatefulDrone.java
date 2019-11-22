@@ -1,6 +1,5 @@
 package uk.ac.ed.inf.powergrab;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -49,7 +48,9 @@ public class StatefulDrone extends Drone {
 //		aStarSearch(nearestStation, badStations);
 		Direction bestDir = findPath(nearestStation, badStations);
 		
+		Point prevPos = getCurPos();
 		move(bestDir);
+		Logging.logToTxt(prevPos, getCurPos(), bestDir, getCoins(), getPower());
 		
 		boolean charged = inRangeOfStation(stations);	
 		if (charged) {
@@ -71,13 +72,12 @@ public class StatefulDrone extends Drone {
 		for (Direction dir : Direction.values()) {
 			Position pos = new Position(getCurPos());
 			Position nextPos = pos.nextPosition(dir);
-//			ChargingStation closestFeature = Map.nearestFeature(stations, nextPos);
 			Point nextPoint = Point.fromLngLat(nextPos.longitude, nextPos.latitude);
-			ChargingStation closestFeature = Map.nearestFeature(badStations, nextPoint);
-			double distToStation = Position.pythDistanceFrom(nextPoint, closestFeature.getPosition());
-			System.out.println("Direction: " + dir.toString() + " Closest station: " + closestFeature.getId() + " Distance: " + distToStation);
+			ChargingStation nearestFeature = Map.nearestFeature(badStations, nextPoint);
+			double distToStation = Position.pythDistanceFrom(nextPoint, nearestFeature.getPosition());
+			System.out.println("Direction: " + dir.toString() + " Closest station: " + nearestFeature.getId() + " Distance: " + distToStation);
 			
-			if (!closestFeature.isGood() && distToStation < 0.00025) {
+			if (!nearestFeature.isGood() && distToStation < 0.00025) {
 					avoidDirs.add(dir);
 				
 			}
@@ -121,7 +121,6 @@ public class StatefulDrone extends Drone {
 	}
 	
 	public static void main() {
-//		System.out.print(Direction.values());
 	}
 
 }

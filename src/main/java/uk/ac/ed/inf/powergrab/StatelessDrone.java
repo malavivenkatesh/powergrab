@@ -103,7 +103,10 @@ public class StatelessDrone extends Drone {
 			nextDir = (Direction) possibleDirs.toArray()[randomInt];			
 		}
 		
+		
+		Point prevPos = getCurPos();
 		move(nextDir);
+		Logging.logToTxt(prevPos, getCurPos(), nextDir, getCoins(), getPower());
 		
 //		System.out.println("Moves: " + getMoves() +  " Power: " + getPower() + " Next Direction: " + nextDir.toString());
 //		avoidDirs.forEach(dir -> System.out.print(dir.toString() + " "));
