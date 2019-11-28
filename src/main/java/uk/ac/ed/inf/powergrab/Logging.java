@@ -45,7 +45,10 @@ public class Logging {
 		new File("logs").mkdir();
         String filePath = String.join(File.separator, ".", "logs", filename);
 		
-		FileWriter fw = new FileWriter(filePath, true);
+        File f = new File(filePath);
+        f.delete();
+        
+		FileWriter fw = new FileWriter(f, true);
 		bw = new BufferedWriter(fw);
 	}
 	
