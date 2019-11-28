@@ -1,14 +1,20 @@
 package uk.ac.ed.inf.powergrab;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 import com.mapbox.geojson.Point;
 
 public class StatefulDrone extends Drone {
+	
+	int lastMovePowerGain = -1;
+	// TODO: change variable name
+	List<ChargingStation> okaybelikethat = new ArrayList<ChargingStation>();
 	
 	public StatefulDrone(Point curPos, int seed) {
 		super(curPos, seed);
@@ -26,7 +32,6 @@ public class StatefulDrone extends Drone {
 			return;
 		}		
 		
-		
 		List<ChargingStation> goodStations = stations.
 				stream().filter(station -> station.isGood() && !station.isVisited()).
 				collect(Collectors.toList());
@@ -35,27 +40,45 @@ public class StatefulDrone extends Drone {
 				collect(Collectors.toList());
 		
 //		goodStations.forEach(station -> System.out.print(station.getId() + " " + station.getPosition().latitude() + " " + station.getPosition().longitude()));
-		System.out.println();
+//		System.out.println();
+		
+		goodStations.removeAll(okaybelikethat);
 		
 		if (goodStations.size() == 0) {
-			System.out.print(getCoins());
+//			System.out.print(getCoins());
 			avoidanceStrategy(badStations);
+			System.out.println();
+			int j = 0;
+			for (ChargingStation s: okaybelikethat) {
+				j++;
+			}
+			System.out.println(j);
+			
 			return;
 		}
 		
 		ChargingStation nearestStation = Map.nearestFeature(goodStations, getCurPos());
-		System.out.println(nearestStation.getId());
+		
+		if (getMoves() - lastMovePowerGain > 40) {
+			okaybelikethat.add(nearestStation);
+			goodStations.remove(nearestStation);
+			nearestStation = Map.nearestFeature(goodStations, getCurPos());
+		}
+		
+//		System.out.println(nearestStation.getId());
 		
 //		aStarSearch(nearestStation, badStations);
 		Direction bestDir = findPath(nearestStation, badStations);
 		
 		Point prevPos = getCurPos();
 		move(bestDir);
+		System.out.print("Moves: " + getMoves() + "    ");
 		Logging.logToTxt(prevPos, getCurPos(), bestDir, getCoins(), getPower());
 		
 		boolean charged = inRangeOfStation(stations);	
 		if (charged) {
-			System.out.println("Charged");
+			lastMovePowerGain = getMoves();
+//			System.out.println("Charged");
 		}
 		
 		searchStrategy(stations);
@@ -76,7 +99,7 @@ public class StatefulDrone extends Drone {
 			Point nextPoint = Point.fromLngLat(nextPos.longitude, nextPos.latitude);
 			ChargingStation nearestFeature = Map.nearestFeature(badStations, nextPoint);
 			double distToStation = Position.pythDistanceFrom(nextPoint, nearestFeature.getPosition());
-			System.out.println("Direction: " + dir.toString() + " Closest station: " + nearestFeature.getId() + " Distance: " + distToStation);
+//			System.out.println("Direction: " + dir.toString() + " Closest station: " + nearestFeature.getId() + " Distance: " + distToStation);
 			
 			if (!nearestFeature.isGood() && distToStation < 0.00025) {
 					avoidDirs.add(dir);
@@ -103,7 +126,7 @@ public class StatefulDrone extends Drone {
 			Point nextPoint = Point.fromLngLat(nextPos.longitude, nextPos.latitude);
 			
 			double dist = Position.pythDistanceFrom(nextPoint, goal.getPosition());
-			System.out.println("Direction: " + dir.toString() + " Distance: " + dist);
+//			System.out.println("Direction: " + dir.toString() + " Distance: " + dist);
 			
 			if (dist < shortestDistance) {
 				shortestDistance = dist;
@@ -111,11 +134,11 @@ public class StatefulDrone extends Drone {
 			}
 		}
 		
-		System.out.println("Moves: " + getMoves() +  " Power: " + getPower() + " Next Direction: " + bestDir.toString());
-		avoidDirs.forEach(dir -> System.out.print(dir.toString() + " "));
-		System.out.println();
-		possibleDirs.forEach(dir -> System.out.print(dir.toString() + " "));
-		System.out.println();
+//		System.out.println("Moves: " + getMoves() +  " Power: " + getPower() + " Next Direction: " + bestDir.toString());
+//		avoidDirs.forEach(dir -> System.out.print(dir.toString() + " "));
+//		System.out.println();
+//		possibleDirs.forEach(dir -> System.out.print(dir.toString() + " "));
+//		System.out.println();
 		
 		return(bestDir);
 					
@@ -141,7 +164,9 @@ public class StatefulDrone extends Drone {
 					Point prevPos = getCurPos();
 					addPathTrace(this.getCurPos());
 					move(dir);
+					System.out.print("Moves: " + getMoves());
 					Logging.logToTxt(prevPos, getCurPos(), dir, getCoins(), getPower());
+					
 					break;
 				}
 			}
@@ -152,7 +177,6 @@ public class StatefulDrone extends Drone {
 		
 	
 	public static void main() {
-		System.out.println("Test");
 	}
 
 }

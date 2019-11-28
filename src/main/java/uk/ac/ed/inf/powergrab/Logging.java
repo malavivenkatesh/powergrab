@@ -63,6 +63,8 @@ public class Logging {
 						);
 		try {
 			bw.write(info);
+			System.out.print(info);
+			System.out.println();
 			bw.newLine();
 		} catch (IOException e) {
 			e.printStackTrace();
