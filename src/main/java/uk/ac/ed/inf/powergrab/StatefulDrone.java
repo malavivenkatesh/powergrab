@@ -39,6 +39,7 @@ public class StatefulDrone extends Drone {
 		
 		if (goodStations.size() == 0) {
 			System.out.print(getCoins());
+			avoidanceStrategy(badStations);
 			return;
 		}
 		
@@ -120,7 +121,38 @@ public class StatefulDrone extends Drone {
 					
 	}
 	
+	public void avoidanceStrategy(List<ChargingStation> badStations) {
+		
+		for (int i = getMoves(); i < 250; i++) {
+			for(Direction dir : Direction.values()) {
+				
+				Position pos = new Position(getCurPos());
+				Position nextPos = pos.nextPosition(dir);
+				Point nextPoint = Point.fromLngLat(nextPos.longitude, nextPos.latitude);
+				
+				ChargingStation nearestFeature = Map.nearestFeature(badStations, nextPoint);
+				
+				double dist = Position.pythDistanceFrom(nextPoint, nearestFeature.getPosition());
+					
+				if (dist < 0.00025 || !nextPos.inPlayArea()) {
+					continue;
+				}
+				else {
+					Point prevPos = getCurPos();
+					addPathTrace(this.getCurPos());
+					move(dir);
+					Logging.logToTxt(prevPos, getCurPos(), dir, getCoins(), getPower());
+					break;
+				}
+			}
+		}
+		
+		return;
+	}
+		
+	
 	public static void main() {
+		System.out.println("Test");
 	}
 
 }
