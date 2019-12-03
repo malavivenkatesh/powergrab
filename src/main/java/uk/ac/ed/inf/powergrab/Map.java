@@ -31,6 +31,15 @@ public class Map {
 		return(nearestFeature);
 	}
 	
+	public static boolean inRange(Point p, Point q) {
+		double range = 0.00025; 
+		if (Position.pythDistanceFrom(p, q) > range) {
+			return(false);
+		}
+		else {
+			return(true);
+		}
+	}
 
 	private static String formUrlString(String year, String month, String day) {
 		String startPath = "http://homepages.inf.ed.ac.uk/stg/powergrab/";

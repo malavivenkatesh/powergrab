@@ -5,6 +5,9 @@ import com.mapbox.geojson.Point;
 public class Position {
 	public double latitude;
 	public double longitude;
+	public double g_score = 0;
+	public double h_score;
+	public Direction dirToGetHere;
 	
 	public Position(double latitude, double longitude) { 
 		this.latitude = latitude;
@@ -139,6 +142,17 @@ public class Position {
 		double dist = 0.0003 * ((dx + dy) - Math.min(dx, dy));
 		return(dist);
 	}
+	
+	public static Direction dirFromPos(Position cur, Position p) {
+		for (Direction dir: Direction.values()) {
+			Position nextPos = cur.nextPosition(dir);
+			if (nextPos.longitude == p.longitude && nextPos.latitude == p.latitude) {
+				return(dir);
+			}
+		}
+		return null;
+	}
+	
 	
 	public static void main(String[] args) {
 		double longitude = -3;

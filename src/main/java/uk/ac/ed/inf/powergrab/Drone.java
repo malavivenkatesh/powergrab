@@ -55,7 +55,7 @@ public abstract class Drone {
 		ChargingStation closestFeature = Map.nearestFeature(stations, getCurPos());
 		double shortestDistance = Position.pythDistanceFrom(getCurPos(), closestFeature.getPosition());
 		
-		if(shortestDistance < 0.00025) {
+		if(shortestDistance < 0.00025 && !closestFeature.isVisited()) {
 			closestFeature.charge(this);
 			return(true);
 		}
