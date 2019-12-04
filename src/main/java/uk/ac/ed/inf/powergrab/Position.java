@@ -7,7 +7,9 @@ public class Position {
 	public double longitude;
 	public double g_score = 0;
 	public double h_score;
+	public double f_score;
 	public Direction dirToGetHere;
+	public Position parent;
 	
 	public Position(double latitude, double longitude) { 
 		this.latitude = latitude;
