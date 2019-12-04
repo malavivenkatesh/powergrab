@@ -5,9 +5,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
-import java.util.PriorityQueue;
 import java.util.Set;
-import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 import com.mapbox.geojson.Point;
@@ -84,6 +82,9 @@ public class StatefulDrone extends Drone {
 		
 		System.out.println("Done all good stations " + getMoves());
 		
+		okaybelikethat.forEach(x -> System.out.println(x.getId()));
+		System.out.println();
+		
 		if (goodStations.size() == 0) {
 //			System.out.print(getCoins());
 			if (!okaybelikethat.isEmpty()) {
@@ -120,75 +121,14 @@ public class StatefulDrone extends Drone {
 //					System.out.println(Map.nearestFeature(stations, getCurPos()).getId());
 				}
 			}
+			okaybelikethat.forEach(x -> System.out.println(x.getId()));
+			System.out.println();
 			
 			avoidanceStrategy(badStations);
 			System.out.println();
 			
-//			okaybelikethat.forEach(station -> System.out.println(station.getId() + " " + station.getPosition().latitude() + " " + station.getPosition().longitude() + " -- "));
-//			System.out.println();
-			
 			return;
 		}
-		
-//		ChargingStation nearestStation = Map.nearestFeature(goodStations, getCurPos());
-		
-//		if (getMoves() - lastMovePowerGain > 30) {
-//			lastMovePowerGain = getMoves();
-//			okaybelikethat.add(nearestStation);
-//			goodStations.remove(nearestStation);
-//			if (goodStations.size() > 0) {
-//				nearestStation = Map.nearestFeature(goodStations, getCurPos());
-//			}
-//			else {
-//				if (!okaybelikethat.isEmpty()) {
-//					for (ChargingStation cs : okaybelikethat) {
-//						System.out.println(cs.getId());
-//						System.out.println();
-//						List<Direction> moves = aStarSearch(cs, stations, badStations);
-//						for (Direction dir: moves) {
-//							Point prevPos = getCurPos();
-//							move(dir);
-//							addPathTrace(this.getCurPos());
-//
-//							
-//							boolean charged = inRangeOfStation(stations);	
-//							if (charged) {
-//								lastMovePowerGain = getMoves();
-//							}							
-//							System.out.print("Moves: " + getMoves() + "    ");
-//							Logging.logToTxt(prevPos, getCurPos(), dir, getCoins(), getPower());
-//						}
-//						System.out.println(Map.nearestFeature(stations, getCurPos()).getId());
-//					}
-//				}
-//				
-//				avoidanceStrategy(badStations);
-//				System.out.println();
-//				
-//				okaybelikethat.forEach(station -> System.out.println(station.getId() + " " + station.getPosition().latitude() + " " + station.getPosition().longitude() + " -- "));
-//				System.out.println();
-//				
-//				return;
-//			}
-//		}
-		
-//		System.out.println(nearestStation.getId());
-		
-//		aStarSearch(nearestStation, badStations);
-//		Direction bestDir = findPath(nearestStation, badStations);
-//		
-//		Point prevPos = getCurPos();
-//		move(bestDir);
-//		System.out.print("Moves: " + getMoves() + "    ");
-//		Logging.logToTxt(prevPos, getCurPos(), bestDir, getCoins(), getPower());
-//		
-//		boolean charged = inRangeOfStation(stations);	
-//		if (charged) {
-//			lastMovePowerGain = getMoves();
-//			System.out.println("Charged");
-//		}
-//		
-//		searchStrategy(stations);
 		
 	}
 	
@@ -197,7 +137,7 @@ public class StatefulDrone extends Drone {
 		List<Position> open = new ArrayList<>();
 		List<Position> closed = new ArrayList<>();
 		int count = 0;
-		boolean goalReached = Map.nearestFeature(stations, getCurPos()).getId().equals(goal.getId()) && Map.inRange(getCurPos(), goal.getPosition());
+		boolean goalReached = false;
 		
 		Position curPos = new Position(getCurPos());
 		
@@ -213,8 +153,13 @@ public class StatefulDrone extends Drone {
 		
 		Position curCheck = open.get(0);
 		Point curCheckPoint = Point.fromLngLat(curCheck.longitude, curCheck.latitude);
-		while(!(goalReached) && count < 50) {
-			open.remove(0);
+		while(!(goalReached) && count < 100) {
+			
+			if (open.isEmpty()) {
+				return (null);
+			}
+			
+//			open.remove(0);
 			closed.add(curCheck);
 			open.removeAll(open);
 			
@@ -232,10 +177,19 @@ public class StatefulDrone extends Drone {
 			neighbors = addAllNeighbors(open, stations, closed, curCheck, goal);
 			open.addAll(neighbors);
 			
+			if (open.isEmpty()) {
+				return (null);
+			}
+			
 			open.sort(c);
 			path.add(curCheck.dirToGetHere);
 			count++;
 			curPos = curCheck;
+			if (open.isEmpty()) {
+				return (null);
+			}
+			
+			open.sort(c);
 			curCheck = open.get(0);
 			curCheckPoint = Point.fromLngLat(curCheck.longitude, curCheck.latitude);
 			goalReached = Map.nearestFeature(stations, curCheckPoint).getId().equals(goal.getId()) && Map.inRange(curCheckPoint, goal.getPosition());
