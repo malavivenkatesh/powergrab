@@ -22,8 +22,8 @@ public class ChargingStation {
 	}
 	
 	public void charge(Drone drone) {
-		double newCoins = drone.getCoins() + coins;
-		double newPower = drone.getPower() + power;
+		float newCoins = (float) (drone.getCoins() + coins);
+		float newPower = (float) (drone.getPower() + power);
 		double remainingCoins = 0;
 		double remainingPower = 0;
 		

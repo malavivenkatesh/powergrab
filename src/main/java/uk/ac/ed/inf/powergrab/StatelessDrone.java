@@ -1,5 +1,6 @@
 package uk.ac.ed.inf.powergrab;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -16,7 +17,7 @@ public class StatelessDrone extends Drone {
 	}
 	
 	
-	public StatelessDrone(double power, double coins, Point pos, int seed) {
+	public StatelessDrone(float power, float coins, Point pos, int seed) {
 		super(power, coins, 0, pos, seed);
 	}
 
@@ -77,15 +78,15 @@ public class StatelessDrone extends Drone {
 		// Compare the numerical value of the station by adding power and coins together
 		Comparator<ChargingStation> compCoinsAndPower = 
 				Comparator.comparing(x-> x.getCoins() + x.getPower());
-		
+
 		// Pick the best good station in range
 		if (goodStationRange.size() > 0) {			
-			ChargingStation bestStation = Collections.max(goodStationRange.keySet(), compCoinsAndPower);
+			ChargingStation bestStation = Collections.max(new ArrayList<>(goodStationRange.keySet()), compCoinsAndPower);
 			nextDir = goodStationRange.get(bestStation);
 		}
 		// Or the least bad station if surrounded by bad stations
 		else if (badStationRange.size() == 16) {
-			ChargingStation bestStation = Collections.max(badStationRange.keySet(), compCoinsAndPower);
+			ChargingStation bestStation = Collections.max(new ArrayList<>(badStationRange.keySet()), compCoinsAndPower);
 			nextDir = badStationRange.get(bestStation);
 		}
 		// Otherwise move so not in range of any bad station

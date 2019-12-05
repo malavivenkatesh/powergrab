@@ -16,7 +16,7 @@ public class StatefulDrone extends Drone {
 	}
 
 	
-	public StatefulDrone(double power, double coins, Point pos, int seed) {
+	public StatefulDrone(float power, float coins, Point pos, int seed) {
 		super(power, coins, 0, pos, seed);
 	}
 	
