@@ -1,7 +1,6 @@
 package uk.ac.ed.inf.powergrab;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
@@ -10,171 +9,127 @@ import java.util.stream.Collectors;
 
 import com.mapbox.geojson.Point;
 
-public class StatefulDrone extends Drone {
-	
-	int lastMovePowerGain = -1;
-	int m = 147;
-	// TODO: change variable name
-	List<ChargingStation> okaybelikethat = new ArrayList<ChargingStation>();
+public class StatefulDrone extends Drone {	
 	
 	public StatefulDrone(Point curPos, int seed) {
 		super(curPos, seed);
 	}
 
+	
 	public StatefulDrone(double power, double coins, Point pos, int seed) {
 		super(power, coins, 0, pos, seed);
 	}
 	
+	
 	@Override
-	public void searchStrategy(List<ChargingStation> stations) {
-		addPathTrace(this.getCurPos());
-		// End conditions
-		if (getPower() < 1.25 || getMoves() >= 250) {
-			return;
-		}		
+	public void searchStrategy() {
+		addPathTrace(this.getCurPoint());
 		
-		
-		List<ChargingStation> goodStations = stations.
+		List<ChargingStation> goodStations = Map.getStations().
 				stream().filter(station -> station.isGood() && !station.isVisited()).
 				collect(Collectors.toList());
-		List<ChargingStation> badStations =  stations.
+		List<ChargingStation> badStations =  Map.getStations().
 				stream().filter(station -> !station.isGood()).
 				collect(Collectors.toList());
-		
-//		badStations.forEach(station -> System.out.println(station.getId() + " " + station.getPosition().latitude() + " " + station.getPosition().longitude()));
-//		System.out.println();
-		
-//		goodStations.removeAll(okaybelikethat);
+		// TODO: change variable name
+		List<ChargingStation> okaybelikethat = new ArrayList<ChargingStation>();
 		
 		while (!goodStations.isEmpty()) {
-			if (getPower() < 1.25 || getMoves() >= 250) {
-				return;
-			}
-			
-			ChargingStation station = Map.nearestFeature(goodStations, getCurPos());
+			ChargingStation station = Map.nearestFeature(goodStations, getCurPoint());
 			goodStations.remove(station);
-			System.out.println("A Star Choice: " + getMoves());
-			List<Direction> moves = aStarSearch(station, stations, badStations);
+			System.out.println("Greedy Search Choice: " + getMoves());
+			List<Direction> moves = greedySearch(station, badStations);
 			if (moves == null) {
 				okaybelikethat.add(station);
 				continue;
 			}
-			for (Direction dir: moves) {
-				Point prevPos = getCurPos();
-				move(dir);
-				addPathTrace(this.getCurPos());
-				Position curPos = new Position(getCurPos());
-				if (!curPos.inPlayArea()) { 
-					System.out.print("Moves: " + getMoves());
-				}
-				
-
-				
-				boolean charged = inRangeOfStation(stations);	
-				if (charged) {
-					lastMovePowerGain = getMoves();
-//					System.out.println("Charged");
-				}				
-				System.out.print("Moves: " + getMoves() + "    ");
-				Logging.logToTxt(prevPos, getCurPos(), dir, getCoins(), getPower());
+			
+			boolean moved = makeMoves(moves);
+			if (!moved) {
+				return;
 			}
 		}
 		
-		System.out.println("Done all good stations " + getMoves());
-		
+		System.out.println("Done all good stations in " + getMoves() + " moves");
 		okaybelikethat.forEach(x -> System.out.println(x.getId()));
 		System.out.println();
 		
-		if (goodStations.size() == 0) {
-//			System.out.print(getCoins());
-			if (!okaybelikethat.isEmpty()) {
-				for (ChargingStation cs : okaybelikethat) {
+		if (!okaybelikethat.isEmpty()) {
+			for (ChargingStation cs : okaybelikethat) {
 //					System.out.println(cs.getId());
 //					System.out.println();
-					System.out.println("Move: " + getMoves());
-					List<Direction> moves = aStarSearch(cs, stations, badStations);
-					if (moves == null) {
-						System.out.println("Null search");
-						continue;
-						}
-					
-					for (Direction dir: moves) {
-						Point prevPos = getCurPos();
-						move(dir);
-						addPathTrace(this.getCurPos());
-						Position curPos = new Position(getCurPos());
-						
-						if (!curPos.inPlayArea()) { 
-							System.out.print("Moves: " + getMoves());
-						}
-						
-						System.out.print("Moves: " + getMoves() + "    ");
-						Logging.logToTxt(prevPos, getCurPos(), dir, getCoins(), getPower());
-						
-						boolean charged = inRangeOfStation(stations);	
-						if (charged) {
-							lastMovePowerGain = getMoves();
-//							System.out.println("Charged");
-						}
+				System.out.println("Move: " + getMoves());
+				List<Direction> moves = greedySearch(cs, badStations);
+				if (moves == null) {
+					System.out.println("Null search");
+					continue;
 					}
-					
-//					System.out.println(Map.nearestFeature(stations, getCurPos()).getId());
+				
+				boolean moved = makeMoves(moves);
+				if (!moved) {
+					return;
 				}
 			}
-			okaybelikethat.forEach(x -> System.out.println(x.getId()));
-			System.out.println();
-			
-			avoidanceStrategy(badStations);
-			System.out.println();
-			
-			return;
 		}
+		okaybelikethat.forEach(x -> System.out.println(x.getId()));
+		System.out.println();
 		
+		avoidanceStrategy(badStations);
+		System.out.println();
+		
+		return;
 	}
 	
-	public List<Direction> aStarSearch(ChargingStation goal, List<ChargingStation> stations, List<ChargingStation> badStations) {
+	private boolean makeMoves(List<Direction> moves) {
+		for (Direction dir: moves) {
+			Point prevPos = getCurPoint();
+			boolean moved = move(dir);
+			
+			if (!moved) {
+				return(false);
+			}
+			
+			boolean charged = inRangeOfStation();	
+			if (charged) {
+				System.out.printf("Charged! Moves: %d Power: %3f Coins %3f\n", getMoves(), getPower(), getCoins());
+			}				
+			System.out.print("Moves: " + getMoves() + "    ");
+			Logging.logToTxt(prevPos, getCurPoint(), dir, getCoins(), getPower());
+		}
+		return (true);
+	}
+		
+	
+	public List<Direction> greedySearch(ChargingStation goal, List<ChargingStation> badStations) {
 		List<Direction> path = new ArrayList<>();
 		List<Position> open = new ArrayList<>();
 		List<Position> closed = new ArrayList<>();
 		int count = 0;
 		boolean goalReached = false;
 		
-		Position curPos = new Position(getCurPos());
+		Position curPos = new Position(getCurPoint());
 		
 		closed.add(curPos);
-		curPos.g_score = 0;
-		curPos.h_score = Position.pythDistanceFrom(goal.getPosition(), getCurPos());
-		List<Position> neighbors = addAllNeighbors(open, stations, closed, curPos, goal);
+		curPos.h_score = Position.pythDistanceFrom(goal.getLocation(), getCurPoint());
+		List<Position> neighbors = addAllNeighbors(open, Map.getStations(), closed, curPos, goal);
 		
 		open.addAll(neighbors);
 		
-		Comparator<Position> c = Comparator.comparing(x -> x.g_score + x.h_score);
+		Comparator<Position> c = Comparator.comparing(x -> x.h_score);
 		open.sort(c);
 		
 		Position curCheck = open.get(0);
 		Point curCheckPoint = Point.fromLngLat(curCheck.longitude, curCheck.latitude);
-		while(!(goalReached) && count < 100) {
+		while(!(goalReached) && count < 50) {
 			
 			if (open.isEmpty()) {
 				return (null);
 			}
 			
-//			open.remove(0);
 			closed.add(curCheck);
 			open.removeAll(open);
 			
-			ChargingStation nearest = Map.nearestFeature(stations, curCheckPoint);
-			double dist = Position.pythDistanceFrom(nearest.getPosition(), curCheckPoint);
-			
-			if (!curCheck.inPlayArea()) {
-				System.out.println("Not in Play");
-			}
-			
-			if (!nearest.isGood() && dist < 0.00025) {
-				System.out.println("Bad Station");
-			}
-			
-			neighbors = addAllNeighbors(open, stations, closed, curCheck, goal);
+			neighbors = addAllNeighbors(open, Map.getStations(), closed, curCheck, goal);
 			open.addAll(neighbors);
 			
 			if (open.isEmpty()) {
@@ -184,7 +139,6 @@ public class StatefulDrone extends Drone {
 			open.sort(c);
 			path.add(curCheck.dirToGetHere);
 			count++;
-			curPos = curCheck;
 			if (open.isEmpty()) {
 				return (null);
 			}
@@ -192,21 +146,16 @@ public class StatefulDrone extends Drone {
 			open.sort(c);
 			curCheck = open.get(0);
 			curCheckPoint = Point.fromLngLat(curCheck.longitude, curCheck.latitude);
-			goalReached = Map.nearestFeature(stations, curCheckPoint).getId().equals(goal.getId()) && Map.inRange(curCheckPoint, goal.getPosition());
+			goalReached = Map.nearestFeature(Map.getStations(), curCheckPoint).getId().equals(goal.getId()) 
+					&& Map.inRange(curCheckPoint, goal.getLocation());
 		}
-		ChargingStation nearest = Map.nearestFeature(stations, curCheckPoint);
-		double dist = Position.pythDistanceFrom(nearest.getPosition(), curCheckPoint);
+		
 		path.add(curCheck.dirToGetHere);
 		
-		if (goalReached) {
-			return (path);
-		}
-		else {
-			return (null);
-		}
-		
-		
+		if (goalReached) {return (path);}
+		else {return (null);}
 	}
+	
 	
 	public List<Position> addAllNeighbors(List<Position> open, List<ChargingStation> stations, 
 			List<Position> closed, Position curPos, ChargingStation goal) {
@@ -216,14 +165,13 @@ public class StatefulDrone extends Drone {
 			Position nextPos = curPos.nextPosition(dir);
 			nextPos.dirToGetHere = dir;
 			Point nextPoint = Point.fromLngLat(nextPos.longitude, nextPos.latitude);
-			ChargingStation nearestStation = Map.nearestFeature(stations, nextPoint);
-			double dist = Position.pythDistanceFrom(nextPoint, nearestStation.getPosition());
+			ChargingStation nearestStation = Map.nearestFeature(Map.getStations(), nextPoint);
+			double dist = Position.pythDistanceFrom(nextPoint, nearestStation.getLocation());
 			if (nextPos.inPlayArea()) {
-					if ((nearestStation.isGood() || (!nearestStation.isGood() && dist >= 0.00025))
-							&& !checkInList(open, nextPos) && !checkInList(closed, nextPos)) {
-					nextPos.g_score += 1;
-					double goalDist = Position.pythDistanceFrom(nextPoint, goal.getPosition());
-					nextPos.h_score = (goalDist / 0.0003);
+					if ((nearestStation.isGood() || (!nearestStation.isGood() && dist >= ChargingStation.chargeRange))
+							&& !checkPosInList(open, nextPos) && !checkPosInList(closed, nextPos)) {
+					double goalDist = Position.pythDistanceFrom(nextPoint, goal.getLocation());
+					nextPos.h_score = (goalDist);
 					neighbors.add(nextPos);
 				}
 			}
@@ -232,110 +180,44 @@ public class StatefulDrone extends Drone {
 		return neighbors;
 	}
 	
-	public boolean checkInList(List<Position> array, Position pos) {
-		return(array.stream().anyMatch((p) -> (p.longitude == pos.longitude && p.latitude == pos.latitude)));
+	
+	public boolean checkPosInList(List<Position> list, Position pos) {
+		return(list.stream().anyMatch((p) -> 
+		(p.longitude == pos.longitude && p.latitude == pos.latitude)));
 	}
 	
-	
-	public void newAStar(ChargingStation goal, List<ChargingStation> stations, List<ChargingStation> badStations) {
-		
-	}
-	
-	
-	public Direction findPath(ChargingStation goal, List<ChargingStation> badStations) {
-		
-		Set<Direction> avoidDirs = new HashSet<Direction>();
-		Direction comeBackToDir;
-		
-		for (Direction dir : Direction.values()) {
-			Position pos = new Position(getCurPos());
-			Position nextPos = pos.nextPosition(dir);
-			Point nextPoint = Point.fromLngLat(nextPos.longitude, nextPos.latitude);
-			ChargingStation nearestFeature = Map.nearestFeature(badStations, nextPoint);
-			double distToStation = Position.pythDistanceFrom(nextPoint, nearestFeature.getPosition());
-//			System.out.println("Direction: " + dir.toString() + " Closest station: " + nearestFeature.getId() + " Distance: " + distToStation);
-			
-			if (!nearestFeature.isGood() && distToStation < 0.00025) {
-					avoidDirs.add(dir);
-				
-			}
-			if (!nextPos.inPlayArea()) {
-				avoidDirs.add(dir);
-			}
-			
-			if (okaybelikethat.contains(nearestFeature)) {
-				comeBackToDir = dir;
-				return(comeBackToDir);
-			}
-		}
-		
-		Set<Direction> possibleDirs = new HashSet<Direction>();
-		Collections.addAll(possibleDirs, Direction.values());
-		
-		possibleDirs.removeAll(avoidDirs);
-		
-		
-		double shortestDistance = Integer.MAX_VALUE;
-		Direction bestDir = Direction.N;
-		
-		for (Direction dir : possibleDirs) {
-			
-			Position pos = new Position(getCurPos());
-			Position nextPos = pos.nextPosition(dir);
-			Point nextPoint = Point.fromLngLat(nextPos.longitude, nextPos.latitude);
-			
-			double dist = Position.pythDistanceFrom(nextPoint, goal.getPosition());
-//			System.out.println("Direction: " + dir.toString() + " Distance: " + dist);
-			
-			if (dist < shortestDistance) {
-				shortestDistance = dist;
-				bestDir = dir;
-			}
-		}
-		
-//		System.out.println("Moves: " + getMoves() +  " Power: " + getPower() + " Next Direction: " + bestDir.toString());
-//		avoidDirs.forEach(dir -> System.out.print(dir.toString() + " "));
-//		System.out.println();
-//		possibleDirs.forEach(dir -> System.out.print(dir.toString() + " "));
-//		System.out.println();
-		
-		return(bestDir);
-					
-	}
 	
 	public void avoidanceStrategy(List<ChargingStation> badStations) {
 		
-		for (int i = getMoves(); i < 250; i++) {
+		for (int i = getMoves(); i < maxMoves; i++) {
+			if (endCondition()) {
+				break;
+			}
+			
 			for(Direction dir : Direction.values()) {
 				
-				Position pos = new Position(getCurPos());
-				Position nextPos = pos.nextPosition(dir);
+				Position curPos = new Position(getCurPoint());
+				Position nextPos = curPos.nextPosition(dir);
 				Point nextPoint = Point.fromLngLat(nextPos.longitude, nextPos.latitude);
 				
 				ChargingStation nearestFeature = Map.nearestFeature(badStations, nextPoint);
-				
-				double dist = Position.pythDistanceFrom(nextPoint, nearestFeature.getPosition());
+				double dist = Position.pythDistanceFrom(nextPoint, nearestFeature.getLocation());
 					
-				if (dist < 0.00025 || !nextPos.inPlayArea()) {
+				if (dist < ChargingStation.chargeRange || !nextPos.inPlayArea()) {
 					continue;
 				}
+				
 				else {
-					Point prevPos = getCurPos();
-					addPathTrace(this.getCurPos());
+					Point prevPos = getCurPoint();
 					move(dir);
-//					System.out.print("Moves: " + getMoves());
-					Logging.logToTxt(prevPos, getCurPos(), dir, getCoins(), getPower());
-					
+					System.out.print("Moves: " + getMoves() + "    ");
+					Logging.logToTxt(prevPos, getCurPoint(), dir, getCoins(), getPower());
 					break;
 				}
 			}
 		}
 		
 		return;
-	}
-		
-	
-	public static void main() {
 	}
 
 }

@@ -4,7 +4,7 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.util.ArrayList;
+import java.util.List;
 
 import com.mapbox.geojson.Feature;
 import com.mapbox.geojson.FeatureCollection;
@@ -15,7 +15,7 @@ public class Logging {
 	
 	protected static BufferedWriter bw;
 	
-	public static void logToGJson(ArrayList<Feature> featureList, ArrayList<Point> dronePathTrace, 
+	public static void logToGJson(List<Feature> featureList, List<Point> dronePathTrace, 
 			String year, String month, String day, String state) {
 		
 		String filename = String.join("-", state, day, month, year) + ".geojson";

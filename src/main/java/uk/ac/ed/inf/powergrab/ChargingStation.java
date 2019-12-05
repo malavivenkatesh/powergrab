@@ -4,15 +4,16 @@ import com.mapbox.geojson.Point;
 
 public class ChargingStation {
 	
-	private Point position;
+	private Point location;
 	private double coins;
 	private double power;
 	private boolean isGood;
 	private String id;
 	private boolean visited;
+	public static final double chargeRange = 0.00025;
 	
 	public ChargingStation(Point position, double coins, double power, boolean isGood, String id) {
-		this.position = position;
+		this.location = position;
 		this.coins = coins;
 		this.power = power;
 		this.isGood = isGood;
@@ -46,8 +47,8 @@ public class ChargingStation {
 		this.visited = true;
 	}
 
-	public Point getPosition() {
-		return position;
+	public Point getLocation() {
+		return location;
 	}
 
 	public double getCoins() {

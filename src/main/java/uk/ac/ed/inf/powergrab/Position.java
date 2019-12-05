@@ -5,11 +5,22 @@ import com.mapbox.geojson.Point;
 public class Position {
 	public double latitude;
 	public double longitude;
-	public double g_score = 0;
 	public double h_score;
-	public double f_score;
 	public Direction dirToGetHere;
-	public Position parent;
+	
+	
+	// The maths and variable names for finding these values follow the course-work specification
+	// Initialising return values
+	
+	// Different width changes for each step in direction from N to E
+	private static final double w2 = Drone.moveRange * Math.cos(Math.toRadians(67.5));
+	private static final double w3 = Drone.moveRange * Math.cos(Math.toRadians(45));
+	private static final double w4 = Drone.moveRange * Math.cos(Math.toRadians(22.5));
+	
+	// Different height changes for each step in direction from N to E
+	private static final double h2 = Drone.moveRange * Math.sin(Math.toRadians(67.5));
+	private static final double h3 = Drone.moveRange * Math.sin(Math.toRadians(45));
+	private static final double h4 = Drone.moveRange * Math.sin(Math.toRadians(22.5));
 	
 	public Position(double latitude, double longitude) { 
 		this.latitude = latitude;
@@ -28,18 +39,6 @@ public class Position {
 		double x1 = this.longitude;
 		double y1 = this.latitude;
 		
-		double r = 0.0003;
-		
-		// Different width changes for each step in direction from N to E
-		double w2 = r * Math.cos(Math.toRadians(67.5));
-		double w3 = r * Math.cos(Math.toRadians(45));
-		double w4 = r * Math.cos(Math.toRadians(22.5));
-		
-		// Different height changes for each step in direction from N to E
-		double h2 = r * Math.sin(Math.toRadians(67.5));
-		double h3 = r * Math.sin(Math.toRadians(45));
-		double h4 = r * Math.sin(Math.toRadians(22.5));
-		
 		/* Directions outside of the N to E quadrant use the same magnitude for 
 		 * distance changes, but a different direction.
 		 * Going South means you subtract the corresponding height change instead of adding it.
@@ -49,7 +48,7 @@ public class Position {
 		// Calculate width and height change based on direction
 		switch(direction) {
 		case N:
-			y1 += r;
+			y1 += Drone.moveRange;
 			break;
 		case NNE:
 			x1 += w2;
@@ -64,7 +63,7 @@ public class Position {
 			y1 += h4;
 			break;
 		case E:
-			x1 += r;
+			x1 += Drone.moveRange;
 			break;
 		case ESE:
 			x1 += w4;
@@ -79,7 +78,7 @@ public class Position {
 			y1 -= h2;
 			break;
 		case S:
-			y1 -= r;
+			y1 -= Drone.moveRange;
 			break;
 		case SSW:
 			x1 -= w2;
@@ -94,7 +93,7 @@ public class Position {
 			y1 -= h4;
 			break;
 		case W:
-			x1 -= r;
+			x1 -= Drone.moveRange;
 			break;
 		case WNW:
 			x1 -= w4;
@@ -136,37 +135,4 @@ public class Position {
 		
 		return(dist);
 	}
-	
-	// Heuristic distance for A Star search
-	public static double diagDistance(Point p, Point q) {
-		double dx = p.longitude() - q.longitude();
-		double dy = p.latitude() - q.longitude();
-		double dist = 0.0003 * ((dx + dy) - Math.min(dx, dy));
-		return(dist);
-	}
-	
-	public static Direction dirFromPos(Position cur, Position p) {
-		for (Direction dir: Direction.values()) {
-			Position nextPos = cur.nextPosition(dir);
-			if (nextPos.longitude == p.longitude && nextPos.latitude == p.latitude) {
-				return(dir);
-			}
-		}
-		return null;
-	}
-	
-	
-	public static void main(String[] args) {
-		double longitude = -3;
-		double latitude = 55;
-		Position s = new Position(latitude, longitude);
-		Point sPoint = Point.fromLngLat(longitude, latitude);
-		for (Direction dir : Direction.values()) {
-			Position p = s.nextPosition(dir);
-			Point pPoint = Point.fromLngLat(p.longitude, p.longitude);
-			double dist = diagDistance(sPoint, pPoint);
-			System.out.println(dist);
-		}
-	}
-	
 }

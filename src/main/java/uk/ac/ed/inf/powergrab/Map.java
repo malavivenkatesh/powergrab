@@ -12,7 +12,10 @@ import com.mapbox.geojson.Feature;
 import com.mapbox.geojson.FeatureCollection;
 import com.mapbox.geojson.Point;
 
-public class Map {
+public final class Map {
+	
+	private static List<ChargingStation> stations;
+	
 	public static ChargingStation nearestFeature(List<ChargingStation> stations, Point pos) {
 		
 		double shortestDistance = Integer.MAX_VALUE;
@@ -20,7 +23,7 @@ public class Map {
 		
 		for (ChargingStation station : stations) {
 			
-			double dist = Position.pythDistanceFrom(pos, station.getPosition());
+			double dist = Position.pythDistanceFrom(pos, station.getLocation());
 			
 			if (dist < shortestDistance) {
 				shortestDistance = dist;
@@ -32,8 +35,7 @@ public class Map {
 	}
 	
 	public static boolean inRange(Point p, Point q) {
-		double range = 0.00025; 
-		if (Position.pythDistanceFrom(p, q) > range) {
+		if (Position.pythDistanceFrom(p, q) > ChargingStation.chargeRange) {
 			return(false);
 		}
 		else {
@@ -85,7 +87,8 @@ public class Map {
 		
 	}
 	
-	public static List<ChargingStation> getStations(List<Feature> features) {
+	public static void setStations(String year, String month, String day) {
+		List<Feature> features= getFeatures(year, month, day); 
 		List<ChargingStation> stations = new ArrayList<ChargingStation>();
 	    for (Feature feature : features) {
 	    	double coins = feature.getProperty("coins").getAsDouble();
@@ -96,7 +99,8 @@ public class Map {
 	    			coins, power, isGood, id); 
 	    	stations.add(station);
 	    }
-	    return (stations);
+	    Map.stations  = stations;
+	    return;
 	}
 	
 	public static List<Feature> getFeatures(String year, String month, String day) {
@@ -110,4 +114,9 @@ public class Map {
 	public static void main( String[] args ) {
 				
 	}
+
+	public static List<ChargingStation> getStations() {
+		return stations;
+	}
+	
 }

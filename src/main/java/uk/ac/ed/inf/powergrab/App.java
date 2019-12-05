@@ -1,7 +1,6 @@
 package uk.ac.ed.inf.powergrab;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -28,7 +27,7 @@ public class App
         String state = args[6];
         
         List<Feature> featureList = Map.getFeatures(year, month, day);
-        List<ChargingStation> stations = Map.getStations(featureList);
+        Map.setStations(year, month, day);
         Point startPos = Point.fromLngLat(longitude, latitude);
         
         Drone drone;
@@ -44,18 +43,18 @@ public class App
         	return;
         }
         
-		List<ChargingStation> goodStations = stations.
+		List<ChargingStation> goodStations = Map.getStations().
 				stream().filter(station -> station.isGood() && !station.isVisited()).
 				collect(Collectors.toList());
 		
-		double sum = 0;
+		double coinSum = 0;
 		for (ChargingStation station: goodStations) {
-			sum += station.getCoins();
+			coinSum += station.getCoins();
 		}
 		
-		double sumP = 0;
+		double powerSum = 0;
 		for (ChargingStation station: goodStations) {
-			sumP += station.getPower();
+			powerSum += station.getPower();
 		}
 	
 		
@@ -64,8 +63,8 @@ public class App
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-        drone.searchStrategy(stations);
-        Logging.logToGJson((ArrayList<Feature>) featureList, drone.getPathTrace(), 
+        drone.searchStrategy();
+        Logging.logToGJson(featureList, drone.getPathTrace(), 
         		year, month, day, state);
         try {
 			Logging.bw.close();
@@ -74,7 +73,7 @@ public class App
 		}
         
         System.out.println();
-        System.out.printf("Total    Coins: %f, Total    Power: %f", sum, sumP);
+        System.out.printf("Total    Coins: %f, Total    Power: %f", coinSum, powerSum);
         System.out.println();
         System.out.printf("Gathered Coins: %f, Gathered Power: %f", drone.getCoins(), drone.getPower());
         System.out.println();
