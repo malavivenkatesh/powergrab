@@ -7,17 +7,15 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
 
-import com.mapbox.geojson.Point;
-
 public class StatelessDrone extends Drone {
 
 	
-	public StatelessDrone(Point curPos, int seed) {
+	public StatelessDrone(Position curPos, int seed) {
 		super(curPos, seed);
 	}
 	
 	
-	public StatelessDrone(float power, float coins, Point pos, int seed) {
+	public StatelessDrone(float power, float coins, Position pos, int seed) {
 		super(power, coins, 0, pos, seed);
 	}
 
@@ -29,7 +27,7 @@ public class StatelessDrone extends Drone {
 	 */
 	@Override
 	public void searchStrategy() {
-		addPathTrace(this.getCurPoint());
+		addPathTrace(this.getCurPos());
 		
 		if (endCondition()) {
 			return;
@@ -49,15 +47,13 @@ public class StatelessDrone extends Drone {
 		HashMap<ChargingStation, Direction> badStationRange = new HashMap<ChargingStation, Direction>();
 		Set<Direction> avoidDirs = new HashSet<Direction>();
 
-		
+		// Find the stations in range
 		for (Direction dir : Direction.values()) {
-			Position curPos = new Position(getCurPoint());
-			Position nextPos = curPos.nextPosition(dir);
-			Point nextPoint = Point.fromLngLat(nextPos.longitude, nextPos.latitude);
-			ChargingStation nearestFeature = Map.nearestFeature(Map.getStations(), nextPoint);
+			Position nextPos = getCurPos().nextPosition(dir);
+			ChargingStation nearestFeature = Map.nearestFeature(Map.getStations(), nextPos);
 			
 			
-			if (Map.inRange(nextPoint, nearestFeature.getLocation())) {
+			if (Map.inRange(nextPos, nearestFeature.getPos())) {
 				if (nearestFeature.getCoins() > 0 && nearestFeature.getPower() > 0) {
 					goodStationRange.put(nearestFeature, dir);
 				}
@@ -89,7 +85,7 @@ public class StatelessDrone extends Drone {
 			ChargingStation bestStation = Collections.max(new ArrayList<>(badStationRange.keySet()), compCoinsAndPower);
 			nextDir = badStationRange.get(bestStation);
 		}
-		// Otherwise move so not in range of any bad station
+		// Otherwise move so drone is not in range of any bad station
 		else {
 			Set<Direction> possibleDirs = new HashSet<Direction>();
 			Collections.addAll(possibleDirs, Direction.values());
@@ -101,11 +97,11 @@ public class StatelessDrone extends Drone {
 			nextDir = (Direction) possibleDirs.toArray()[randomInt];			
 		}
 		
-		
-		Point prevPos = getCurPoint();
+		// Update position and log
+		Position prevPos = getCurPos();
 		move(nextDir);
 		System.out.print("Moves " + getMoves() + "    ");
-		Logging.logToTxt(prevPos, getCurPoint(), nextDir, getCoins(), getPower());
+		Logging.logToTxt(prevPos, getCurPos(), nextDir, getCoins(), getPower());
 		
 		searchStrategy();
 		

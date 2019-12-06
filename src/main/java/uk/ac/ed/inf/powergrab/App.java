@@ -10,10 +10,11 @@ import java.util.stream.Collectors;
 
 import com.mapbox.geojson.Feature;
 import com.mapbox.geojson.FeatureCollection;
-import com.mapbox.geojson.Point;
 
 public class App 
 {
+	
+	
     public static void main( String[] args ) {
     	// Error for argument parsing
         if (args.length != 7) {
@@ -33,9 +34,9 @@ public class App
         
         List<Feature> featureList = getFeatures(year, month, day);
         Map.setStations(featureList);
-        Point startPos = Point.fromLngLat(longitude, latitude);
+        Position startPos = new Position(latitude, longitude);
         
-        Drone drone;
+        Drone drone = null;
         
         if (state.equals("stateless")) {
         	drone = new StatelessDrone(startPos, seed);
@@ -48,6 +49,7 @@ public class App
         	return;
         }
         
+        // List of good stations to log best possible score in map
 		List<ChargingStation> goodStations = Map.getStations().
 				stream().filter(station -> station.isGood() && !station.isVisited()).
 				collect(Collectors.toList());
@@ -64,6 +66,7 @@ public class App
 	
 		
 		drone.initSearchStrategy(year, month, day, state);
+		Logging.logToGJson(featureList, drone.getPathTrace(), year, month, day, state);
 		
         System.out.println();
         System.out.printf("Total    Coins: %f, Total    Power: %f\n", coinSum, powerSum);
@@ -72,6 +75,14 @@ public class App
         
     }
     
+    
+    /**
+     * This method is used to gain a list of features from a specified map
+     * @param year - the year for the map
+     * @param month - the month for the map
+     * @param day - the day for the map 
+     * @return - a list of features from the map for the given date
+     */
 	public static List<Feature> getFeatures(String year, String month, String day) {
 		String stringUrl = formUrlString(year, month, day);
 		String gjson = getNetwork(stringUrl);
@@ -80,14 +91,25 @@ public class App
 		return(features);
 	}
     
+	/**
+	 * Forms a string in the correct format for a URL
+     * @param year - the year for the URL
+     * @param month - the month for the URL
+     * @param day - the day for the URL
+	 * @return - a string formatted as a URL
+	 */
 	private static String formUrlString(String year, String month, String day) {
-		String startPath = "http://homepages.inf.ed.ac.uk/stg/powergrab/";
+		String startPath = "http://127.0.0.1:1920/stg/powergrab/";
 		String endPath = "powergrabmap.geojson";
 		
 		return(String.join("/", startPath, year, month, day, endPath));
 	}
 	
-	// Function either returns string of geojson or empty string, if error occurs
+	/**
+	 * Method used to gain a string form of the GeoJson from the server
+	 * @param stringUrl - the URL to connect to
+	 * @return - a string form of the GeoJson for a map
+	 */
 	private static String getNetwork(String stringUrl) {
 		String gjson = "";
 		URL mapUrl;
@@ -117,6 +139,11 @@ public class App
 		return gjson;
 	}
 	
+	/**
+	 * Converts a string of GeoJson to a list of features
+	 * @param gjson - the input String to convert
+	 * @return - a list of Features for the map
+	 */
 	private static List<Feature> stringToFeatures(String gjson) {
 		FeatureCollection ft = FeatureCollection.fromJson(gjson);
 		List<Feature> features = ft.features();

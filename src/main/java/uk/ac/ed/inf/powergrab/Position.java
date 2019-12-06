@@ -3,10 +3,10 @@ package uk.ac.ed.inf.powergrab;
 import com.mapbox.geojson.Point;
 
 public class Position {
-	public double latitude;
-	public double longitude;
-	public double h_score;
-	public Direction dirToGetHere;
+	private double latitude;
+	private double longitude;
+	protected double hScore; //heuristic score 
+	protected Direction dirToGetHere;
 	
 	
 	// The maths and variable names for finding these values follow the course-work specification
@@ -32,6 +32,21 @@ public class Position {
 		this.longitude = point.longitude();
 	}
 	
+	
+	public double getLatitude() {
+		return latitude;
+	}
+	
+	public double getLongitude() {
+		return longitude;
+	}
+	
+	/**
+	 * Calculates the latitude and longitude of the next position, given a 
+	 * direction to move in
+	 * @param direction - the direction in which to move
+	 * @return - a new Position with the new location
+	 */
 	public Position nextPosition(Direction direction) {
 		// The maths and variable names for finding these values follow the course-work specification
 		
@@ -113,6 +128,10 @@ public class Position {
 		return newPosition;
 	}
 	
+	/**
+	 * Checks whether a Position is in the game boundary
+	 * @return - boolean based on whether the Position is in the boundary
+	 */
 	public boolean inPlayArea() {
 		
 		// Note that the boundary is not in the play area
@@ -127,11 +146,16 @@ public class Position {
 		return true;
 	}
 	
-	// Pythagorean distance from one point to the other
-	public static double pythDistanceFrom(Point p, Point q) {
+	/**
+	 * Calculates the Pythagorean (Euclidean) distance between this Position and 
+	 * another
+	 * @param q - the other Position to compare to
+	 * @return - a double indication the Pythagorean distance
+	 */
+	public double pythDistanceFrom(Position q) {
 		double dist = Math.sqrt(
-				Math.pow(p.latitude() - q.latitude(), 2) 
-				+ Math.pow(p.longitude() - q.longitude(), 2));
+				Math.pow(getLatitude() - q.getLatitude(), 2) 
+				+ Math.pow(getLongitude() - q.getLongitude(), 2));
 		
 		return(dist);
 	}

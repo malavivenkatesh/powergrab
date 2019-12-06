@@ -4,6 +4,7 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 import com.mapbox.geojson.Feature;
@@ -12,10 +13,18 @@ import com.mapbox.geojson.LineString;
 import com.mapbox.geojson.Point;
 
 public class Logging {
-	
+	// BufferedWriter used to write to the txt file line by line
 	protected static BufferedWriter bw;
-	
-	public static void logToGJson(List<Feature> featureList, List<Point> dronePathTrace, 
+	/**
+	 * Logs a geojson file showing the drone's flight path
+	 * @param featureList - list of features from the map
+	 * @param dronePathTrace - drone's movements
+	 * @param year
+	 * @param month
+	 * @param day
+	 * @param state - stateful or stateless
+	 */
+	public static void logToGJson(List<Feature> featureList, List<Position> dronePathTrace, 
 			String year, String month, String day, String state) {
 		
 		String filename = String.join("-", state, day, month, year) + ".geojson";
@@ -23,15 +32,19 @@ public class Logging {
 		new File("logs").mkdir();
 		
 		// Adding drone's path to the feature list for required log file
-		LineString lineTrace = LineString.fromLngLats(dronePathTrace);
+		// Converting Positions to Points
+		List<Point> dronePathPoints = new ArrayList<>();
+		dronePathTrace.forEach(x -> dronePathPoints.add(
+				Point.fromLngLat(x.getLongitude(), x.getLatitude())));
+		LineString lineTrace = LineString.fromLngLats(dronePathPoints);
 		Feature lineTraceFeature = Feature.fromGeometry(lineTrace);
 		featureList.add(lineTraceFeature);
+    	FeatureCollection featureCol = FeatureCollection.fromFeatures(featureList);
+        String jsonString = featureCol.toJson();
+        String filePath = String.join(File.separator, ".", "logs", filename);
 		
         try {
-        	FeatureCollection featureCol = FeatureCollection.fromFeatures(featureList);
-            String jsonString = featureCol.toJson();
-            String filePath = String.join(File.separator, ".", "logs", filename);
-            FileWriter writer = new FileWriter(filePath);
+        	FileWriter writer = new FileWriter(filePath);
             writer.write(jsonString);
             writer.close();
         } catch (IOException e) {
@@ -40,7 +53,15 @@ public class Logging {
         }
 	}
 	
-	public static void setWriter(String year, String month, String day, String state) throws IOException {
+	/**
+	 * Initialises the BufferedWriter
+	 * @param year
+	 * @param month
+	 * @param day
+	 * @param state
+	 * @throws IOException - if there's been an error creating the file writer
+	 */
+	public static void setWriter(String year, String month, String day, String state){
 		String filename = String.join("-", state, day, month, year) + ".txt";
 		new File("logs").mkdir();
         String filePath = String.join(File.separator, ".", "logs", filename);
@@ -48,16 +69,29 @@ public class Logging {
         File f = new File(filePath);
         f.delete();
         
-		FileWriter fw = new FileWriter(f, true);
-		bw = new BufferedWriter(fw);
+		FileWriter fw;
+		try {
+			fw = new FileWriter(f, true);
+			bw = new BufferedWriter(fw);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 	}
 	
-	public static void logToTxt(Point curPos, Point nextPos, Direction dir, double coins, double power) {
-		String info = String.join(",", Double.toString(curPos.latitude()),
-				 		Double.toString(curPos.longitude()),
+	/**
+	 * Writes one line to the txt log file with the drone's relevant information
+	 * @param curPos
+	 * @param nextPos
+	 * @param dir
+	 * @param coins
+	 * @param power
+	 */
+	public static void logToTxt(Position curPos, Position nextPos, Direction dir, double coins, double power) {
+		String info = String.join(",", Double.toString(curPos.getLatitude()),
+				 		Double.toString(curPos.getLongitude()),
 				 		dir.toString(),
-				 		Double.toString(nextPos.latitude()),
-				 		Double.toString(nextPos.longitude()),
+				 		Double.toString(nextPos.getLatitude()),
+				 		Double.toString(nextPos.getLongitude()),
 				 		Double.toString(coins),
 				 		Double.toString(power)
 						);

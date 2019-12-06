@@ -2,28 +2,30 @@ package uk.ac.ed.inf.powergrab;
 
 import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 import java.util.stream.Collectors;
-
-import com.mapbox.geojson.Point;
 
 public class StatefulDrone extends Drone {	
 	
-	public StatefulDrone(Point curPos, int seed) {
+	public StatefulDrone(Position curPos, int seed) {
 		super(curPos, seed);
 	}
 
 	
-	public StatefulDrone(float power, float coins, Point pos, int seed) {
+	public StatefulDrone(float power, float coins, Position pos, int seed) {
 		super(power, coins, 0, pos, seed);
 	}
-	
-	
+		
+	/**
+	 * Controls the main outline of the search strategy.
+	 * Finds all the good stations and stations to avoid. Then picks the nearest station
+	 * and gets a path to it. Then moves following that path.
+	 * Repeats until there are no more good stations, then avoids the bad stations
+	 * until the end of the game.
+	 */
 	@Override
 	public void searchStrategy() {
-		addPathTrace(this.getCurPoint());
+		addPathTrace(this.getCurPos());
 		
 		List<ChargingStation> goodStations = Map.getStations().
 				stream().filter(station -> station.isGood() && !station.isVisited()).
@@ -35,7 +37,7 @@ public class StatefulDrone extends Drone {
 		List<ChargingStation> okaybelikethat = new ArrayList<ChargingStation>();
 		
 		while (!goodStations.isEmpty()) {
-			ChargingStation station = Map.nearestFeature(goodStations, getCurPoint());
+			ChargingStation station = Map.nearestFeature(goodStations, getCurPos());
 			goodStations.remove(station);
 			System.out.println("Greedy Search Choice: " + getMoves());
 			List<Direction> moves = greedySearch(station, badStations);
@@ -54,23 +56,23 @@ public class StatefulDrone extends Drone {
 		okaybelikethat.forEach(x -> System.out.println(x.getId()));
 		System.out.println();
 		
-		if (!okaybelikethat.isEmpty()) {
-			for (ChargingStation cs : okaybelikethat) {
-//					System.out.println(cs.getId());
-//					System.out.println();
-				System.out.println("Move: " + getMoves());
-				List<Direction> moves = greedySearch(cs, badStations);
-				if (moves == null) {
-					System.out.println("Null search");
-					continue;
-					}
-				
-				boolean moved = makeMoves(moves);
-				if (!moved) {
-					return;
+		while(!okaybelikethat.isEmpty()) {
+			ChargingStation station = Map.nearestFeature(okaybelikethat, getCurPos());
+			okaybelikethat.remove(station);
+			System.out.println("Move: " + getMoves());
+			List<Direction> moves = greedySearch(station, badStations);
+			if (moves == null) {
+				System.out.println("Null search");
+				continue;
 				}
+			
+			boolean moved = makeMoves(moves);
+			if (!moved) {
+				return;
 			}
+			
 		}
+		
 		okaybelikethat.forEach(x -> System.out.println(x.getId()));
 		System.out.println();
 		
@@ -80,9 +82,14 @@ public class StatefulDrone extends Drone {
 		return;
 	}
 	
+	/**
+	 * Given a list of directions, moves the drone in each direction in turn
+	 * @param moves - lit of directions in which to move
+	 * @return - boolean based on whether all the moves were successful
+	 */
 	private boolean makeMoves(List<Direction> moves) {
 		for (Direction dir: moves) {
-			Point prevPos = getCurPoint();
+			Position prevPos = getCurPos();
 			boolean moved = move(dir);
 			
 			if (!moved) {
@@ -91,87 +98,87 @@ public class StatefulDrone extends Drone {
 			
 			boolean charged = inRangeOfStation();	
 			if (charged) {
-				System.out.printf("Charged! Moves: %d Power: %3f Coins %3f\n", getMoves(), getPower(), getCoins());
+				System.out.printf("Charged! Moves: %d Power: %3f Coins %3f\n", 
+						getMoves(), getPower(), getCoins());
 			}				
 			System.out.print("Moves: " + getMoves() + "    ");
-			Logging.logToTxt(prevPos, getCurPoint(), dir, getCoins(), getPower());
+			Logging.logToTxt(prevPos, getCurPos(), dir, getCoins(), getPower());
 		}
 		return (true);
 	}
 		
 	
-	public List<Direction> greedySearch(ChargingStation goal, List<ChargingStation> badStations) {
+	private List<Direction> greedySearch(ChargingStation goal, List<ChargingStation> badStations) {
 		List<Direction> path = new ArrayList<>();
 		List<Position> open = new ArrayList<>();
 		List<Position> closed = new ArrayList<>();
 		int count = 0;
 		boolean goalReached = false;
+		Comparator<Position> hScoreComp = Comparator.comparing(x -> x.hScore);
 		
-		Position curPos = new Position(getCurPoint());
-		
+		Position curPos = (getCurPos());
 		closed.add(curPos);
-		curPos.h_score = Position.pythDistanceFrom(goal.getLocation(), getCurPoint());
-		List<Position> neighbors = addAllNeighbors(open, Map.getStations(), closed, curPos, goal);
+		curPos.hScore = curPos.pythDistanceFrom(goal.getPos());
+		
+		List<Position> neighbors = addAllNeighbors(open, closed, curPos, goal);
 		
 		open.addAll(neighbors);
-		
-		Comparator<Position> c = Comparator.comparing(x -> x.h_score);
-		open.sort(c);
-		
+		open.sort(hScoreComp);
 		Position curCheck = open.get(0);
-		Point curCheckPoint = Point.fromLngLat(curCheck.longitude, curCheck.latitude);
 		while(!(goalReached) && count < 50) {
-			
 			if (open.isEmpty()) {
-				return (null);
+				return(null);
 			}
-			
 			closed.add(curCheck);
 			open.removeAll(open);
 			
-			neighbors = addAllNeighbors(open, Map.getStations(), closed, curCheck, goal);
+			neighbors = addAllNeighbors(open, closed, curCheck, goal);
 			open.addAll(neighbors);
 			
 			if (open.isEmpty()) {
-				return (null);
+				return(null);
 			}
 			
-			open.sort(c);
+			open.sort(hScoreComp);
+			
 			path.add(curCheck.dirToGetHere);
 			count++;
-			if (open.isEmpty()) {
-				return (null);
-			}
 			
-			open.sort(c);
 			curCheck = open.get(0);
-			curCheckPoint = Point.fromLngLat(curCheck.longitude, curCheck.latitude);
-			goalReached = Map.nearestFeature(Map.getStations(), curCheckPoint).getId().equals(goal.getId()) 
-					&& Map.inRange(curCheckPoint, goal.getLocation());
+			
+			goalReached = Map.nearestFeature(Map.getStations(), curCheck).getId().equals(goal.getId()) 
+					&& Map.inRange(curCheck, goal.getPos());
 		}
-		
 		path.add(curCheck.dirToGetHere);
 		
 		if (goalReached) {return (path);}
 		else {return (null);}
 	}
 	
-	
-	public List<Position> addAllNeighbors(List<Position> open, List<ChargingStation> stations, 
-			List<Position> closed, Position curPos, ChargingStation goal) {
+	/**
+	 * Finds all the valid (in the play area, not searched and not in range of a bad station)
+	 * neighboring positions (positions one move away). Adds a hScore to each based on how  
+	 * close each is to the goal.
+	 * @param open - list of positions already being considered
+	 * @param closed - list of positions already considered
+	 * @param curPos - the position from which to find all the nieghbors
+	 * @param goal - the final target of the search 
+	 * @return - a list of the valid neighbors
+	 */
+	private List<Position> addAllNeighbors(List<Position> open, List<Position> closed, 
+			Position curPos, ChargingStation goal) {
 		
 		List<Position> neighbors = new ArrayList<>();
 		for (Direction dir: Direction.values()) {
 			Position nextPos = curPos.nextPosition(dir);
 			nextPos.dirToGetHere = dir;
-			Point nextPoint = Point.fromLngLat(nextPos.longitude, nextPos.latitude);
-			ChargingStation nearestStation = Map.nearestFeature(Map.getStations(), nextPoint);
-			double dist = Position.pythDistanceFrom(nextPoint, nearestStation.getLocation());
+			ChargingStation nearestStation = Map.nearestFeature(Map.getStations(), nextPos);
+			double dist = nextPos.pythDistanceFrom(nearestStation.getPos());
 			if (nextPos.inPlayArea()) {
 					if ((nearestStation.isGood() || (!nearestStation.isGood() && dist >= ChargingStation.chargeRange))
 							&& !checkPosInList(open, nextPos) && !checkPosInList(closed, nextPos)) {
-					double goalDist = Position.pythDistanceFrom(nextPoint, goal.getLocation());
-					nextPos.h_score = (goalDist);
+					double goalDist = nextPos.pythDistanceFrom(goal.getPos());
+					nextPos.hScore = (goalDist);
 					neighbors.add(nextPos);
 				}
 			}
@@ -180,14 +187,23 @@ public class StatefulDrone extends Drone {
 		return neighbors;
 	}
 	
-	
-	public boolean checkPosInList(List<Position> list, Position pos) {
+	/**
+	 * Checks if a position is in a list, only considering its latitude and longitude
+	 * @param list - the list to check
+	 * @param pos - the position to find in the list
+	 * @return - boolean based on whether the position is in the list or not
+	 */
+	private boolean checkPosInList(List<Position> list, Position pos) {
 		return(list.stream().anyMatch((p) -> 
-		(p.longitude == pos.longitude && p.latitude == pos.latitude)));
+		(p.getLongitude() == pos.getLongitude() && p.getLatitude() == pos.getLatitude())));
 	}
 	
-	
-	public void avoidanceStrategy(List<ChargingStation> badStations) {
+	/**
+	 * Avoids the given list of bad stations until the drone runs out of moves
+	 * or runs out of power
+	 * @param badStations - the list of charging stations to avoid
+	 */
+	private void avoidanceStrategy(List<ChargingStation> badStations) {
 		
 		for (int i = getMoves(); i < maxMoves; i++) {
 			if (endCondition()) {
@@ -196,22 +212,21 @@ public class StatefulDrone extends Drone {
 			
 			for(Direction dir : Direction.values()) {
 				
-				Position curPos = new Position(getCurPoint());
+				Position curPos = getCurPos();
 				Position nextPos = curPos.nextPosition(dir);
-				Point nextPoint = Point.fromLngLat(nextPos.longitude, nextPos.latitude);
 				
-				ChargingStation nearestFeature = Map.nearestFeature(badStations, nextPoint);
-				double dist = Position.pythDistanceFrom(nextPoint, nearestFeature.getLocation());
+				ChargingStation nearestFeature = Map.nearestFeature(badStations, nextPos);
+				double dist = nextPos.pythDistanceFrom(nearestFeature.getPos());
 					
 				if (dist < ChargingStation.chargeRange || !nextPos.inPlayArea()) {
 					continue;
 				}
 				
 				else {
-					Point prevPos = getCurPoint();
+					Position prevPos = getCurPos();
 					move(dir);
 					System.out.print("Moves: " + getMoves() + "    ");
-					Logging.logToTxt(prevPos, getCurPoint(), dir, getCoins(), getPower());
+					Logging.logToTxt(prevPos, getCurPos(), dir, getCoins(), getPower());
 					break;
 				}
 			}
