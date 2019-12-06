@@ -107,7 +107,12 @@ public class StatefulDrone extends Drone {
 		return (true);
 	}
 		
-	
+	/**
+	 * Greedy best first search. More detail in documentation
+	 * @param goal - target charging stations
+	 * @param badStations - stations to avoid
+	 * @return - list of directions which give a path to follow
+	 */
 	private List<Direction> greedySearch(ChargingStation goal, List<ChargingStation> badStations) {
 		List<Direction> path = new ArrayList<>();
 		List<Position> open = new ArrayList<>();
