@@ -34,7 +34,7 @@ public class StatefulDrone extends Drone {
 				stream().filter(station -> !station.isGood()).
 				collect(Collectors.toList());
 		// TODO: change variable name
-		List<ChargingStation> okaybelikethat = new ArrayList<ChargingStation>();
+		List<ChargingStation> holdingStations = new ArrayList<ChargingStation>();
 		
 		while (!goodStations.isEmpty()) {
 			ChargingStation station = Map.nearestFeature(goodStations, getCurPos());
@@ -42,7 +42,7 @@ public class StatefulDrone extends Drone {
 			System.out.println("Greedy Search Choice: " + getMoves());
 			List<Direction> moves = greedySearch(station, badStations);
 			if (moves == null) {
-				okaybelikethat.add(station);
+				holdingStations.add(station);
 				continue;
 			}
 			
@@ -53,12 +53,12 @@ public class StatefulDrone extends Drone {
 		}
 		
 		System.out.println("Done all good stations in " + getMoves() + " moves");
-		okaybelikethat.forEach(x -> System.out.println(x.getId()));
+		holdingStations.forEach(x -> System.out.println(x.getId()));
 		System.out.println();
 		
-		while(!okaybelikethat.isEmpty()) {
-			ChargingStation station = Map.nearestFeature(okaybelikethat, getCurPos());
-			okaybelikethat.remove(station);
+		while(!holdingStations.isEmpty()) {
+			ChargingStation station = Map.nearestFeature(holdingStations, getCurPos());
+			holdingStations.remove(station);
 			System.out.println("Move: " + getMoves());
 			List<Direction> moves = greedySearch(station, badStations);
 			if (moves == null) {
@@ -73,7 +73,7 @@ public class StatefulDrone extends Drone {
 			
 		}
 		
-		okaybelikethat.forEach(x -> System.out.println(x.getId()));
+		holdingStations.forEach(x -> System.out.println(x.getId()));
 		System.out.println();
 		
 		avoidanceStrategy(badStations);

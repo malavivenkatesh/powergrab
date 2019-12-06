@@ -99,7 +99,7 @@ public class App
 	 * @return - a string formatted as a URL
 	 */
 	private static String formUrlString(String year, String month, String day) {
-		String startPath = "http://127.0.0.1:1920/stg/powergrab/";
+		String startPath = "http://homepages.inf.ed.ac.uk/stg/powergrab/";
 		String endPath = "powergrabmap.geojson";
 		
 		return(String.join("/", startPath, year, month, day, endPath));

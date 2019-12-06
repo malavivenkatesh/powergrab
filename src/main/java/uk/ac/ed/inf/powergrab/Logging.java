@@ -29,8 +29,6 @@ public class Logging {
 		
 		String filename = String.join("-", state, day, month, year) + ".geojson";
 		
-		new File("logs").mkdir();
-		
 		// Adding drone's path to the feature list for required log file
 		// Converting Positions to Points
 		List<Point> dronePathPoints = new ArrayList<>();
@@ -41,7 +39,7 @@ public class Logging {
 		featureList.add(lineTraceFeature);
     	FeatureCollection featureCol = FeatureCollection.fromFeatures(featureList);
         String jsonString = featureCol.toJson();
-        String filePath = String.join(File.separator, ".", "logs", filename);
+        String filePath = String.join(File.separator, ".", filename);
 		
         try {
         	FileWriter writer = new FileWriter(filePath);
@@ -63,8 +61,7 @@ public class Logging {
 	 */
 	public static void setWriter(String year, String month, String day, String state){
 		String filename = String.join("-", state, day, month, year) + ".txt";
-		new File("logs").mkdir();
-        String filePath = String.join(File.separator, ".", "logs", filename);
+        String filePath = String.join(File.separator, ".", filename);
 		
         File f = new File(filePath);
         f.delete();
