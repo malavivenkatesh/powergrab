@@ -12,6 +12,8 @@ To build the project using Maven, run
 `mvn package`
 from the root directory of the project.
 
+It can also be run as a standard Maven project from an IDE with the arguments specified in the next section.
+
 ## Run instructions
 The above creates a target directory with the compiled class files. To run the simulation, run
 `java -jar target/powergrab-0.0.1-SNAPSHOT.jar {day} {month} {year} {latitude} {longitude} {random seed} {drone state}`
