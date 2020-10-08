@@ -9,12 +9,12 @@ The output of the application is a log file, which you can upload here: https://
 
 ## Build Instructions
 To build the project using Maven, run
-`mvn clean compile assembly:single`
+`mvn package`
 from the root directory of the project.
 
 ## Run instructions
 The above creates a target directory with the compiled class files. To run the simulation, run
-`java -cp target/powergrab-0.0.1-SNAPSHOT-jar-with-dependencies.jar uk.ac.ed.inf.powergrab.App {day} {month} {year} {latitude} {longitude} {random seed} {drone state}`
+`java -jar target/powergrab-0.0.1-SNAPSHOT.jar {day} {month} {year} {latitude} {longitude} {random seed} {drone state}`
 
 ## Logs
 A directory called log is created in the root directory with a geojson file showing the drone's path and a txt file showing every move and the drone's power and coins at every move.
