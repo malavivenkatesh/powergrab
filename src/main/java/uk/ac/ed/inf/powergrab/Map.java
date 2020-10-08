@@ -1,47 +1,76 @@
 package uk.ac.ed.inf.powergrab;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.HttpURLConnection;
-import java.net.URL;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Scanner;
 
-import com.mapbox.geojson.FeatureCollection;
+import com.mapbox.geojson.Feature;
+import com.mapbox.geojson.Point;
 
-public class Map {
+public final class Map {
 	
-	public static void main( String[] args ) {
-		String urlPath = "http://homepages.inf.ed.ac.uk/stg/powergrab/2019/01/01/powergrabmap.geojson";
-		try {
-			URL mapUrl = new URL(urlPath);
-			HttpURLConnection conn = (HttpURLConnection) mapUrl.openConnection();
-			conn.setReadTimeout(10000);
-			conn.setConnectTimeout(15000);
-			conn.setRequestMethod("GET");
-			conn.setDoInput(true);
-			conn.connect();
-			
-			InputStream inputStream = conn.getInputStream();
-			
-		    String text = "";
-		    Scanner scanner = new Scanner(inputStream);
-		    
-		    while (scanner.hasNext()) {
-		    	text += scanner.next();
-		    }
-		    scanner.close();
-		    conn.disconnect();
-		    
-		    FeatureCollection ft = FeatureCollection.fromJson(text);
-		    
-		    List feat = ft.features();
-		    System.out.print(feat.get(0));
-		    
-		    
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-				
+	// Stations in the map for a specified date
+	private static List<ChargingStation> stations;
+	
+	public static List<ChargingStation> getStations() {
+		return stations;
 	}
+	
+	/**
+	 * Sets the stations variable
+	 * @param features - list of features from server
+	 */
+	public static void setStations(List<Feature> features) {
+		List<ChargingStation> stations = new ArrayList<ChargingStation>();
+	    for (Feature feature : features) {
+	    	double coins = feature.getProperty("coins").getAsDouble();
+	    	double power = feature.getProperty("power").getAsDouble();
+	    	boolean isGood = coins > 0 && power > 0;
+	    	String id = feature.getProperty("id").getAsString();
+	    	Position pos = new Position((Point) feature.geometry());
+	    	ChargingStation station = new ChargingStation(pos, coins, power, isGood, id); 
+	    	stations.add(station);
+	    }
+	    Map.stations  = stations;
+	    return;
+	}
+	
+	/**
+	 * Gets the closest charging station to a given position
+	 * @param stations - a list of stations to search
+	 * @param pos - the position to search from
+	 * @return - the nearest charging station
+	 */
+	public static ChargingStation nearestFeature(List<ChargingStation> stations, Position pos) {
+		
+		double shortestDistance = Integer.MAX_VALUE;
+		ChargingStation nearestFeature = stations.get(0);
+		
+		for (ChargingStation station : stations) {
+			
+			double dist = pos.pythDistanceFrom(station.getPos());
+			
+			if (dist < shortestDistance) {
+				shortestDistance = dist;
+				nearestFeature = station;
+			}
+		}
+		
+		return(nearestFeature);
+	}
+	
+	/**
+	 * Checks whether two points are in range of each other
+	 * @param p - the first point to compare
+	 * @param q - the second point to compare
+	 * @return - true or false based on whether the positions are in range
+	 */
+	public static boolean inRange(Position p, Position q) {
+		if (p.pythDistanceFrom(q) > ChargingStation.chargeRange) {
+			return(false);
+		}
+		else {
+			return(true);
+		}
+	}
+	
 }
