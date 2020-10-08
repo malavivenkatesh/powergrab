@@ -1,7 +1,11 @@
 # Powergrab Simulation Framework
 Informatics Large Practical Powergrab game simulation framework.
 
-The simulation plays the drone game around the University of Edinuburgh central campus. The aim is for the drone to collect as many coins as possible from the map for the specified date. There is an easier drone (stateless) and a harder drone (stateful).
+The simulation plays the drone game around the University of Edinuburgh central campus. The aim is for the drone to collect as many coins as possible from the map for the specified date within 250 moves and without running out of power. There is an easier drone (stateless) and a harder drone (stateful).
+
+The stateful drone remembers its past positions and moves around the map in a smarter way. 
+
+The output of the application is a log file, which you can upload here: https://homepages.inf.ed.ac.uk/stg/ilp/ or in any other GeoJSON visualiser to view the path of the drone. 
 
 ## Build Instructions
 To build the project using Maven, run
